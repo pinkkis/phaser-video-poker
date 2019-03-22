@@ -16,7 +16,7 @@ const phaser = path.join(phaserModule, 'dist/phaser.min.js');
 module.exports = {
 	output: {
 		globalObject: 'this',
-		// path: path.resolve(__dirname, './docs') // for github hosting
+		path: path.resolve(__dirname, './docs') // for github hosting
 	},
 	entry: {
 		game: ['./src/game.ts']
@@ -76,12 +76,12 @@ module.exports = {
 			version: version,
 			favicon: './src/favicon.ico',
 		}),
-		// new CopyWebpackPlugin([
-		// 	{
-		// 		from: './assets/',
-		// 		to: './assets/'
-		// 	},
-		// ], {}),
+		new CopyWebpackPlugin([
+			{
+				from: './assets/',
+				to: './assets/'
+			},
+		], {}),
 		new MiniCssExtractPlugin({
 			filename: '[name].css',
 			chunkFilename: '[name].css',
@@ -93,9 +93,12 @@ module.exports = {
 			'phaser': phaser
 		}
 	},
+	devtool: 'inline-source-map',
 	optimization: {
 		minimizer: [
-			new TerserPlugin(),
+			new TerserPlugin({
+				sourceMap: true,
+			}),
 			new OptimizeCSSAssetsPlugin()
 		],
 		splitChunks: {

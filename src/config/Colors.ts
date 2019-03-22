@@ -1,0 +1,14 @@
+export enum Colors {
+	GRAY = 0x777777,
+	UI_BLUE = 0x7777ff,
+	WHITE = 0xffffff,
+	YELLOW_TEXT = 0xffff99,
+	BLACK = 0x000000,
+	RED = 0xff0000,
+	BUTTON_GREEN = 0x66ff66,
+	BUTTON_ORANGE = 0x997700,
+	BUTTON_YELLOW = 0xffff66,
+	BUTTON_RED = 0xff3333,
+	BACKGROUND = 0x333333,
+	CARD_COLOR = 0xccccff,
+}

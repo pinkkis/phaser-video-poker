@@ -3,6 +3,8 @@ import '@csstools/normalize.css';
 import './css/styles.css';
 import { BootScene } from './scenes/BootScene';
 import { gameConfig } from './config/GameConfig';
+import { GameScene } from './scenes/GameScene';
+import { gameSettings } from './config/GameSettings';
 
 // set up game class, and global stuff
 export class KokoGame extends Phaser.Game {
@@ -32,4 +34,5 @@ window.onload = () => {
 	}
 
 	game.scene.add('BootScene', BootScene, true);
+	game.scene.add('GameScene', GameScene, false, gameSettings);
 };

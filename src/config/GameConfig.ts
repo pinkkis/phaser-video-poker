@@ -5,11 +5,12 @@ export const gameConfig: GameConfig = {
 		parent: 'game-container',
 		mode: Phaser.Scale.FIT,
 		autoCenter: Phaser.Scale.CENTER_BOTH,
-		width: 640,
-		height: 360,
+		width: 320,
+		height: 240,
 	},
 	render: {
 		pixelArt: true,
+		roundPixels: true,
 	},
 	physics: {
 		default: 'arcade',
