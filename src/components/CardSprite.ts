@@ -1,5 +1,4 @@
 import { Card } from './Card';
-import { Colors } from '../config/Colors';
 
 export const cardWidth: number = 48;
 export const cardHeight: number = 64;
@@ -13,6 +12,7 @@ export class CardSprite extends Phaser.GameObjects.Sprite {
 		super(scene, x, y, 'cardback');
 		this.card = card;
 		this.faceUp = false;
+		this.setOrigin(0);
 		this.scene.add.existing(this);
 	}
 
