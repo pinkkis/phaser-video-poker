@@ -5,7 +5,8 @@ export class Deck {
 	public cards: Card[] = [];
 	public rt: Phaser.GameObjects.RenderTexture;
 
-	private usedCards: Card[];
+	private usedCards: Card[] = [];
+	private lastDrawnIndex: number = 0;
 
 	constructor(jokers: number = 1) {
 		// create a joker
@@ -16,12 +17,10 @@ export class Deck {
 		// create suits
 		const suits = ['club', 'diamond', 'heart', 'spade'] as Suit[];
 		suits.forEach((suit: Suit) => {
-			for (let i = 1; i < cardValues.length; i++) {
-				this.cards.push(new Card(suit, cardValues[i]));
+			for (const value of cardValues) {
+				this.cards.push(new Card(suit, value));
 			}
 		});
-
-		this.shuffle();
 	}
 
 	public shuffle(): void {
@@ -39,27 +38,38 @@ export class Deck {
 		}
 
 		this.usedCards = [];
+		this.lastDrawnIndex = 0;
 	}
 
+	/**
+	 * Draw next card, and put it into used deck, remember to shuffle
+	 * @param includeJoker should jokers be included
+	 */
 	public draw(includeJoker: boolean = true): Card {
-		const card = this.cards[0];
+		if (this.lastDrawnIndex === this.cards.length) {
+			console.warn('tried to draw too many cards, shuffle the deck');
+			return null;
+		}
+
+		const card = this.cards[this.lastDrawnIndex++];
 		this.usedCards.push(card);
 		return card;
 	}
 
+	/**
+	 * Pulls a specific card. This does not update usedCards and is more for testing
+	 * @param suit Suit of card
+	 * @param value optional value of card
+	 */
 	public drawSpecific(suit: Suit, value?: number) {
 		const cards = this.cards.filter( (card: Card) => {
 			return value ? card.suit === suit && card.rank.value === value : card.suit === suit;
 		});
 
 		if (cards.length) {
-			this.usedCards.push(cards[0]);
 			return cards[0];
 		} else {
 			return null;
 		}
 	}
-
-	// private methods ----------------
-
 }

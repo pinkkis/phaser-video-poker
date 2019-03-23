@@ -1,5 +1,6 @@
 import { BaseScene } from './BaseScene';
 import { Colors } from '../config/Colors';
+import { cardWidth, cardHeight } from '../components/CardSprite';
 
 export class BootScene extends BaseScene {
 	private rt: Phaser.GameObjects.RenderTexture;
@@ -25,13 +26,15 @@ export class BootScene extends BaseScene {
 	}
 
 	private createTexture() {
-		this.rt = this.add.renderTexture(-100, -10, 32, 48);
+		this.rt = this.add.renderTexture(-100, -10, cardWidth, cardHeight);
 
 		const graphics = this.add.graphics()
 			.fillStyle(Colors.CARD_COLOR, 1)
-			.fillRoundedRect(0, 0, 32, 48, 2);
+			.lineStyle(2, Colors.WHITE, 1)
+			.fillRoundedRect(0, 0, cardWidth, cardHeight, 2)
+			.strokeRoundedRect(0, 0, cardWidth, cardHeight, 2);
 
-		const cardback = this.add.image(16, 24, 'cardback-graphic').setOrigin(.5);
+		const cardback = this.add.image(cardWidth / 2, cardHeight / 2, 'cardback-graphic').setOrigin(.5).setScale(2);
 
 		this.rt.draw(graphics)
 			.draw(cardback)

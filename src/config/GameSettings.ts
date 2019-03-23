@@ -2,40 +2,60 @@ export interface IGameSettings {
 	[key: string]: any;
 }
 
+interface IHand {
+	key: string;
+	multiplier: number;
+	name: string;
+}
+
 export const gameSettings: IGameSettings = {
 	bets: [.2, .4, .6, .8, 1],
-	hands: {
-		royalFlush: {
+	jokers: 1,
+	hands: [
+		{
+			key: 'fiveOfAKind',
+			multiplier: 100,
+			name: '5 of a Kind',
+		},
+		{
+			key: 'royalFlush',
 			multiplier: 100,
 			name: 'Royal Flush',
 		},
-		straightFlush: {
+		{
+			key: 'straightFlush',
 			multiplier: 50,
 			name: 'Straight Flush',
 		},
-		fourOfAKind: {
+		{
+			key: 'fourOfAKind',
 			multiplier: 30,
-			name: 'Four of a Kind',
+			name: '4 of a Kind',
 		},
-		fullHouse: {
+		{
+			key: 'fullHouse',
 			multiplier: 13,
 			name: 'Full House',
 		},
-		flush: {
+		{
+			key: 'flush',
 			multiplier: 7,
 			name: 'Flush',
 		},
-		straight: {
+		{
+			key: 'straight',
 			multiplier: 6,
 			name: 'Straight',
 		},
-		threeOfAKind: {
+		{
+			key: 'threeOfAKind',
 			multiplier: 3,
-			name: 'Three of a Kind',
+			name: '3 of a Kind',
 		},
-		twoPair: {
+		{
+			key: 'twoPair',
 			multiplier: 1,
 			name: 'Two Pair',
 		},
-	},
+	] as IHand[],
 };

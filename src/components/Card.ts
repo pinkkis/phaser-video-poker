@@ -16,14 +16,18 @@ export class Card {
 	}
 
 	public get isBlack(): boolean {
-		return this.suit === 'club' || this.suit === 'spade';
+		return this.isJoker || this.suit === 'club' || this.suit === 'spade';
 	}
 
 	public get isBig(): boolean {
-		return this.rank.value > 7 && this.rank.value < 14;
+		return this.isJoker || this.rank.value > 7 && this.rank.value < 14;
 	}
 
 	public get isSmall(): boolean {
-		return this.rank.value > 0 && this.rank.value < 7;
+		return this.isJoker || this.rank.value > 0 && this.rank.value < 7;
+	}
+
+	public toString() {
+		return `[Card ${this.rank.symbol} of ${this.suit}]`;
 	}
 }
