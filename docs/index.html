@@ -12,8 +12,8 @@
 		<!-- <script async src="https://www.googletagmanager.com/gtag/js?id="></script> -->
 		<script>
 			window.env = {
-				buildType: '<%= htmlWebpackPlugin.options.buildType %>',
-				version: '<%= htmlWebpackPlugin.options.version %>',
+				buildType: 'production',
+				version: '0.1.0',
 			};
 
 			// window.dataLayer = window.dataLayer || [];
@@ -23,10 +23,10 @@
 			// gtag('js', new Date());
 			// gtag('config', 'UA-######-1', { 'anonymize_ip': true });
 		</script>
-	</head>
+	<link rel="shortcut icon" href="favicon.ico"><link href="vendor.css" rel="stylesheet"><link href="game.css" rel="stylesheet"></head>
 
 	<body>
 		<p>Work in progress...</p>
 		<div id="game-container"></div>
-	</body>
+	<script type="text/javascript" src="vendor.js"></script><script type="text/javascript" src="game.js"></script></body>
 </html>
