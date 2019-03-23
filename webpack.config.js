@@ -83,6 +83,10 @@ module.exports = {
 				from: './assets/',
 				to: './assets/'
 			},
+			{
+				from: './src/CNAME',
+				to: './'
+			}
 		], {}),
 		new MiniCssExtractPlugin({
 			filename: '[name].css',
