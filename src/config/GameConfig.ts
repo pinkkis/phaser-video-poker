@@ -6,7 +6,7 @@ export const gameConfig: GameConfig = {
 		mode: Phaser.Scale.FIT,
 		autoCenter: Phaser.Scale.CENTER_BOTH,
 		width: 320,
-		height: 200,
+		height: 240,
 	},
 	render: {
 		pixelArt: true,

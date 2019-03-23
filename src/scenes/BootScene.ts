@@ -29,8 +29,8 @@ export class BootScene extends BaseScene {
 		this.rt = this.add.renderTexture(-100, -10, cardWidth, cardHeight);
 
 		const graphics = this.add.graphics()
-			.fillStyle(Colors.CARD_COLOR, 1)
-			.lineStyle(2, Colors.WHITE, 1)
+			.fillStyle(Colors.CARD_COLOR.color, 1)
+			.lineStyle(2, Colors.WHITE.color, 1)
 			.fillRoundedRect(0, 0, cardWidth, cardHeight, 2)
 			.strokeRoundedRect(0, 0, cardWidth, cardHeight, 2);
 
