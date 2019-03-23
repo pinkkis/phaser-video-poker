@@ -52,7 +52,7 @@ export class GameScene extends BaseScene {
 		this.backgroundGroup.addMultiple([
 			this.add.rectangle(0, 0, this.scale.gameSize.width, this.scale.gameSize.height, Colors.BACKGROUND).setOrigin(0),
 			this.add.rectangle(0, 0, this.scale.gameSize.width, 22, Colors.GRAY, 1).setOrigin(0),
-			this.add.rectangle(0, this.scale.gameSize.height - 14, this.scale.gameSize.width, 14, Colors.GRAY, 1).setOrigin(0),
+			this.add.rectangle(0, this.scale.gameSize.height - 16, this.scale.gameSize.width, 16, Colors.GRAY, 1).setOrigin(0),
 		]);
 
 		let counter = 0;

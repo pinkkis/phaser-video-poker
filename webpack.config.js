@@ -63,7 +63,9 @@ module.exports = {
 		]
 	},
 	plugins: [
-		new CleanPlugin(),
+		new CleanPlugin({
+			dry: process.env.NODE_ENV !== 'production'
+		}),
 		new webpack.DefinePlugin({
 			'CANVAS_RENDERER': JSON.stringify(true),
 			'WEBGL_RENDERER': JSON.stringify(true)
