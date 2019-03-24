@@ -16,18 +16,13 @@ export const handCounts = (hand: Card[]): Map<any, number> => {
 			.reduce((acc, val) => acc.set(val, 1 + (acc.get(val) || 0)), new Map());
 };
 
-export class PokerGame extends Phaser.Events.EventEmitter {
+export class PokerGame{
 	public deck: Deck;
 	public settings: IGameSettings;
 
 	constructor(settings: IGameSettings) {
-		super();
-
 		this.settings = settings;
 		this.deck = new Deck(this.settings.jokers);
-
-		this.bindEvents();
-		this.emit('game:ready');
 	}
 
 	public checkHand(hand: Card[]): any {
@@ -81,11 +76,6 @@ export class PokerGame extends Phaser.Events.EventEmitter {
 	}
 
 	// private
-
-	private bindEvents() {
-		//
-	}
-
 	private hasFlush(hand: Card[]): boolean {
 		const card = hand[0].isJoker ? hand[1] : hand[0];
 		return hand.every( (c: Card) => c.suit === card.suit);

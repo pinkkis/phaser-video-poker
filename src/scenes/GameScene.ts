@@ -329,6 +329,12 @@ export class GameScene extends BaseScene {
 
 			case GameState.DOUBLE_REPEAT:
 				this.buttonController.dimAll();
+
+				// can't overdouble
+				if (this.registry.get('winnings').current >= this.gameSettings.maxDouble) {
+					this.registry.set('state', GameState.DEFAULT);
+				}
+
 				this.buttonController.deal.lit = true;
 				this.buttonController.double.lit = true;
 				this.buttonController.payout.lit = true;
