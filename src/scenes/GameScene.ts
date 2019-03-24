@@ -181,7 +181,7 @@ export class GameScene extends BaseScene {
 			console.info('Payout press');
 			this.registry.set('money', { current: this.registry.get('winnings').current + this.registry.get('money').current, old: this.registry.get('money').current});
 			this.registry.set('winnings', { current: 0, old: 0 });
-			this.registry.set('state', GameState.SHUFFLING);
+			this.registry.set('state', GameState.DEFAULT);
 			this.createWinnings();
 		}, this);
 
