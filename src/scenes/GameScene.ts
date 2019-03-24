@@ -1,16 +1,20 @@
 import { BaseScene } from './BaseScene';
 import { IGameSettings, gameSettings } from '../config/GameSettings';
 import { Colors } from '../config/Colors';
-import { cardWidth, cardHeight } from '../components/CardSprite';
+import { cardWidth, cardHeight, CardSprite } from '../components/CardSprite';
 import { PokerGame } from '../services/PokerGame';
 import { Card } from '../components/Card';
 import { Button } from '../components/Button';
 import { HoldLabel } from '../components/HoldLabel';
-import { CardSlots } from '../components/CardSlots';
+import { SlotManager } from '../components/SlotManager';
 import { ShuffleDeck } from '../components/ShuffleDeck';
 import { ButtonController } from '../components/ButtonController';
+import { CardSlot } from '../components/CardSlot';
 
 export class GameScene extends BaseScene {
+	public slotManager: SlotManager;
+	public buttonController: ButtonController;
+
 	private rts: Phaser.GameObjects.RenderTexture[];
 
 	private gameSettings: IGameSettings;
@@ -21,8 +25,11 @@ export class GameScene extends BaseScene {
 	private uiGroup: Phaser.GameObjects.Group;
 	private buttonsGroup: Phaser.GameObjects.Group;
 	private shuffleDeck: ShuffleDeck;
-	private cardSlots: any = CardSlots;
-	private buttonController: ButtonController;
+
+	private moneyText: Phaser.GameObjects.BitmapText;
+	private betText: Phaser.GameObjects.BitmapText;
+	private moneyTween: Phaser.Tweens.Tween;
+	private moneyOldValue: number;
 
 	constructor() {
 		super('GameScene');
@@ -31,35 +38,165 @@ export class GameScene extends BaseScene {
 	public create(): void {
 		console.info('GameScene - create()');
 
-		this.bindEvents();
-
 		this.rts = [];
 		this.gameSettings = gameSettings;
+		this.shuffleDeck = new ShuffleDeck(this, 10, 40).setDepth(30);
+
+		this.slotManager = new SlotManager();
 
 		this.pokerGame = new PokerGame(this.gameSettings);
 		this.pokerGame.deck.shuffle();
 
-		this.shuffleDeck = new ShuffleDeck(this, 10, 40).setDepth(30);
+		this.registry.set('state', 'none');
+		this.registry.set('money', 0);
+		this.registry.set('money-old', 0);
+		this.registry.set('bet', 1);
 
 		this.createCardTextures();
 		this.createMainUI();
+
+		this.bindEvents();
+
+		this.registry.set('state', 'start');
+	}
+
+	public update(): void {
+		if (this.moneyTween) {
+			this.moneyOldValue = this.moneyOldValue || 0;
+			const newValue: number = Math.floor(this.moneyTween.getValue());
+			if (newValue - this.moneyOldValue > 1) {
+				this.sound.play('coin', {volume: .5});
+				this.moneyOldValue = newValue;
+			}
+
+			this.moneyText.setText(`${newValue}`);
+		}
 	}
 
 	// -- private methods -----------------------------
 
 	private bindEvents() {
-		this.events.on('', () => {}, this);
+		// this.events.on('', () => {}, this);
 
 		// game start
-		this.events.on('game:ready', () => {
-			console.log('ready');
-			this.buttonController.deal.lit = true;
+		this.registry.events.on('changedata', (parent: any, key: string, data: any) => {
+			console.log('registrychange', key, data);
+
+			if (key === 'state') {
+				this.stateChange(key, data);
+			}
+
+			if (key === 'money') {
+				this.moneyTween = this.tweens.addCounter({
+					from: this.registry.get('money-old'),
+					to: data,
+					onComplete: () => {
+						this.moneyText.setText(data);
+						this.moneyTween = null;
+						this.registry.set('money-old', data);
+					},
+				});
+			}
+
+			if (key === 'bet') {
+				this.betText.setText(data);
+				this.winningsGroup.clear(false, true);
+				this.createWinnings();
+				this.sound.play('bet', {volume: .5});
+			}
 		}, this);
 
 		// deal button
 		this.events.on('btn:deal', () => {
+			this.registry.set('state', 'dealing');
+			this.registry.set('money', this.registry.get('money') - this.registry.get('bet'));
 			this.shuffleDeck.shuffleAnimation();
+
+			const dealtHand = this.pokerGame.deal(5);
+			this.slotManager.slot(0).setCard(new CardSprite(this, this.shuffleDeck.x, this.shuffleDeck.y, dealtHand[0]));
+			this.slotManager.slot(1).setCard(new CardSprite(this, this.shuffleDeck.x, this.shuffleDeck.y, dealtHand[1]));
+			this.slotManager.slot(2).setCard(new CardSprite(this, this.shuffleDeck.x, this.shuffleDeck.y, dealtHand[2]));
+			this.slotManager.slot(3).setCard(new CardSprite(this, this.shuffleDeck.x, this.shuffleDeck.y, dealtHand[3]));
+			this.slotManager.slot(4).setCard(new CardSprite(this, this.shuffleDeck.x, this.shuffleDeck.y, dealtHand[4]));
+
+			this.shuffleDeck.once('shufflecomplete', () => {
+				const timeline = this.tweens.createTimeline({});
+
+				this.slotManager.cards.forEach( (card: CardSprite, index: number) => {
+					timeline.add({
+						targets: card,
+						x: this.slotManager.slot(index).x,
+						y: this.slotManager.slot(index).y,
+						duration: 200,
+					});
+				});
+
+				timeline.setCallback('onComplete', () => {
+					this.slotManager.cards.forEach( (c: CardSprite) => c.flipCard(true) );
+					this.registry.set('state', 'discard');
+				}, null, this);
+
+				timeline.play();
+			});
+
 		}, this);
+
+		// bet button
+		this.events.on('btn:bet', () => {
+			let currentBet = this.registry.get('bet');
+			this.registry.set('bet', currentBet < Math.min(5, this.registry.get('money')) ? ++currentBet : 1);
+		}, this);
+
+		// payout button
+		this.events.on('btn:payout', () => {
+			// payout
+		}, this);
+
+		// double button
+		this.events.on('btn:double', () => {
+			// double
+		}, this);
+
+		// hold buttons
+		this.events.on('btn:hold', (slot: CardSlot) => {
+			slot.setHeld(!slot.held);
+		}, this);
+	}
+
+	// -----------------------------
+
+	private stateChange(key: string, data: any) {
+		console.log('stateChange', key, data);
+
+		if (data === 'attract') {
+			this.registry.set('money', 0);
+		}
+
+		if (data === 'start') {
+			this.registry.set('money', this.gameSettings.startMoney);
+			this.registry.set('state', 'default');
+		}
+
+		if (data === 'default') {
+			if (this.registry.get('money') > 0) {
+				this.buttonController.dimAll();
+				this.slotManager.unHoldAll();
+				this.buttonController.bet.lit = true;
+				this.buttonController.deal.lit = true;
+			} else {
+				this.registry.set('state', 'attract');
+			}
+		}
+
+		if (data === 'dealing') {
+			this.buttonController.dimAll();
+		}
+
+		if (data === 'discard') {
+			this.buttonController.deal.lit = true;
+			this.slotManager.unHoldAll();
+			this.slotManager.buttons.forEach( (b: Button) => b.lit = true );
+		}
 	}
 
 	private createMainUI() {
@@ -153,18 +290,19 @@ export class GameScene extends BaseScene {
 		for (const hand of this.gameSettings.hands) {
 			this.winningsGroup.addMultiple([
 				this.add.bitmapText(135, 34 + 9 * counter, 'arcade', `${hand.name}`.padEnd(17, ' '), 8),
-				this.add.bitmapText(270, 34 + 9 * counter, 'arcade', `${hand.multiplier}`.padStart(3, ' '), 8),
+				this.add.bitmapText(270, 34 + 9 * counter, 'arcade', `${hand.multiplier * this.registry.get('bet')}`.padStart(3, ' '), 8),
 			]);
 			counter++;
 		}
 	}
 
 	private createUi() {
-		this.cardSlots[0].HoldLabel = new HoldLabel(this, this.cardSlots[0].x + 4, 170, 'held').setDepth(100);
-		this.cardSlots[1].HoldLabel = new HoldLabel(this, this.cardSlots[1].x + 4, 170, 'held').setDepth(100);
-		this.cardSlots[2].HoldLabel = new HoldLabel(this, this.cardSlots[2].x + 4, 170, 'held').setDepth(100);
-		this.cardSlots[3].HoldLabel = new HoldLabel(this, this.cardSlots[3].x + 4, 170, 'held').setDepth(100);
-		this.cardSlots[4].HoldLabel = new HoldLabel(this, this.cardSlots[4].x + 4, 170, 'held').setDepth(100);
+
+		this.slotManager.slot(0).setLabel(new HoldLabel(this, this.slotManager.slot(0).x + 4, 170, 'held').setDepth(100));
+		this.slotManager.slot(1).setLabel(new HoldLabel(this, this.slotManager.slot(1).x + 4, 170, 'held').setDepth(100));
+		this.slotManager.slot(2).setLabel(new HoldLabel(this, this.slotManager.slot(2).x + 4, 170, 'held').setDepth(100));
+		this.slotManager.slot(3).setLabel(new HoldLabel(this, this.slotManager.slot(3).x + 4, 170, 'held').setDepth(100));
+		this.slotManager.slot(4).setLabel(new HoldLabel(this, this.slotManager.slot(4).x + 4, 170, 'held').setDepth(100));
 
 		this.uiGroup.addMultiple([
 			this.add.rectangle(3, 3, 122, 24, Colors.WHITE.color).setOrigin(0).setDepth(51),
@@ -176,15 +314,15 @@ export class GameScene extends BaseScene {
 			this.add.bitmapText(5, 11, 'arcade', `money`, 8).setDepth(51),
 			this.add.bitmapText(150, 10, 'arcade', `bet`, 8).setDepth(51),
 
-			this.add.bitmapText(122, 6, 'arcade', `9999`, 16).setOrigin(1, 0).setDepth(51),
-			this.add.bitmapText(180, 6, 'arcade', `1`, 16).setTint(Colors.BLACK.color).setDepth(51),
+			this.moneyText = this.add.bitmapText(122, 6, 'arcade', `${this.registry.get('money')}`, 16).setOrigin(1, 0).setDepth(51),
+			this.betText = this.add.bitmapText(179, 6, 'arcade', `${this.registry.get('bet')}`, 16).setTint(Colors.BLACK.color).setDepth(51),
 
 			// add hold labels
-			this.cardSlots[0].HoldLabel,
-			this.cardSlots[1].HoldLabel,
-			this.cardSlots[2].HoldLabel,
-			this.cardSlots[3].HoldLabel,
-			this.cardSlots[4].HoldLabel,
+			this.slotManager.slot(0).holdLabel,
+			this.slotManager.slot(1).holdLabel,
+			this.slotManager.slot(2).holdLabel,
+			this.slotManager.slot(3).holdLabel,
+			this.slotManager.slot(4).holdLabel,
 		]);
 	}
 
@@ -198,22 +336,21 @@ export class GameScene extends BaseScene {
 		const betBtn = new Button(this, 215, 220, Colors.BUTTON_BLUE, 'bet');
 		const dealBtn = new Button(this, 265, 220, Colors.BUTTON_GREEN, 'deal');
 
-		this.cardSlots[0].holdBtn = new Button(this, this.cardSlots[0].x + 3, 195, Colors.BUTTON_RED, 'hold');
-		this.cardSlots[1].holdBtn = new Button(this, this.cardSlots[1].x + 3, 195, Colors.BUTTON_RED, 'hold');
-		this.cardSlots[2].holdBtn = new Button(this, this.cardSlots[2].x + 3, 195, Colors.BUTTON_RED, 'hold');
-		this.cardSlots[3].holdBtn = new Button(this, this.cardSlots[3].x + 3, 195, Colors.BUTTON_RED, 'hold');
-		this.cardSlots[4].holdBtn = new Button(this, this.cardSlots[4].x + 3, 195, Colors.BUTTON_RED, 'hold');
+		this.slotManager.slot(0).setBtn(new Button(this, this.slotManager.slot(0).x + 3, 195, Colors.BUTTON_RED, 'hold'));
+		this.slotManager.slot(1).setBtn(new Button(this, this.slotManager.slot(1).x + 3, 195, Colors.BUTTON_RED, 'hold'));
+		this.slotManager.slot(2).setBtn(new Button(this, this.slotManager.slot(2).x + 3, 195, Colors.BUTTON_RED, 'hold'));
+		this.slotManager.slot(3).setBtn(new Button(this, this.slotManager.slot(3).x + 3, 195, Colors.BUTTON_RED, 'hold'));
+		this.slotManager.slot(4).setBtn(new Button(this, this.slotManager.slot(4).x + 3, 195, Colors.BUTTON_RED, 'hold'));
+
 
 		this.buttonController = new ButtonController(this, dealBtn, doubleBtn, lowBtn, highBtn, payBtn, betBtn,
-			this.cardSlots[0].holdBtn, this.cardSlots[1].holdBtn, this.cardSlots[2].holdBtn, this.cardSlots[3].holdBtn, this.cardSlots[4].holdBtn);
+			this.slotManager.slot(0).holdBtn, this.slotManager.slot(1).holdBtn, this.slotManager.slot(2).holdBtn, this.slotManager.slot(3).holdBtn, this.slotManager.slot(4).holdBtn);
 
-		this.buttonsGroup.addMultiple([
-			// hold buttons
-			this.cardSlots[0].holdBtn, this.cardSlots[1].holdBtn, this.cardSlots[2].holdBtn, this.cardSlots[3].holdBtn, this.cardSlots[4].holdBtn,
+		// hold buttons
+		this.buttonsGroup.addMultiple(this.slotManager.buttons);
 
-			// other buttons
-			payBtn, doubleBtn, lowBtn, highBtn, betBtn, dealBtn,
-		]).setDepth(70, 0);
+		// other buttons
+		this.buttonsGroup.addMultiple([payBtn, doubleBtn, lowBtn, highBtn, betBtn, dealBtn]).setDepth(70, 0);
 	}
 
 }

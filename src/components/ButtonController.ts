@@ -1,4 +1,5 @@
 import { Button } from './Button';
+import { GameScene } from '../scenes/GameScene';
 
 export class ButtonController {
 	public scene: Phaser.Scene;
@@ -44,6 +45,22 @@ export class ButtonController {
 		this.bindEvents();
 	}
 
+	public dimAll() {
+		this.deal.lit = false;
+		this.double.lit = false;
+		this.low.lit = false;
+		this.high.lit = false;
+		this.payout.lit = false;
+		this.bet.lit = false;
+		this.hold1.lit = false;
+		this.hold2.lit = false;
+		this.hold3.lit = false;
+		this.hold4.lit = false;
+		this.hold5.lit = false;
+	}
+
+	// private ------------------
+
 	private bindEvents() {
 		this.deal.events.on('click', () => {
 			this.scene.events.emit('btn:deal');
@@ -70,23 +87,23 @@ export class ButtonController {
 		}, this);
 
 		this.hold1.events.on('click', () => {
-			this.scene.events.emit('btn:hold1');
+			this.scene.events.emit('btn:hold', (this.scene as GameScene).slotManager.slot(0) );
 		}, this);
 
 		this.hold2.events.on('click', () => {
-			this.scene.events.emit('btn:hold2');
+			this.scene.events.emit('btn:hold', (this.scene as GameScene).slotManager.slot(1) );
 		}, this);
 
 		this.hold3.events.on('click', () => {
-			this.scene.events.emit('btn:hold3');
+			this.scene.events.emit('btn:hold', (this.scene as GameScene).slotManager.slot(2) );
 		}, this);
 
 		this.hold4.events.on('click', () => {
-			this.scene.events.emit('btn:hold4');
+			this.scene.events.emit('btn:hold', (this.scene as GameScene).slotManager.slot(3) );
 		}, this);
 
 		this.hold5.events.on('click', () => {
-			this.scene.events.emit('btn:hold5');
+			this.scene.events.emit('btn:hold', (this.scene as GameScene).slotManager.slot(4) );
 		}, this);
 	}
 }

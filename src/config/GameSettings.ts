@@ -9,7 +9,8 @@ interface IHand {
 }
 
 export const gameSettings: IGameSettings = {
-	bets: [.2, .4, .6, .8, 1],
+	bets: [1, 2, 3, 4, 5],
+	startMoney: 20,
 	jokers: 1,
 	hands: [
 		{

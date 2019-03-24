@@ -28,6 +28,9 @@ export class ShuffleDeck extends Phaser.GameObjects.Container {
 							this.scene.sound.play('shuffle2', {volume: .33});
 						}
 					},
+					onComplete: () => {
+						this.emit('shufflecomplete');
+					},
 				});
 			}
 		}
