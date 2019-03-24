@@ -20,6 +20,7 @@ export class BootScene extends BaseScene {
 		this.load.audio('coin', ['assets/sounds/coin.wav']);
 		this.load.audio('deal', ['assets/sounds/deal.wav']);
 		this.load.audio('kosh', ['assets/sounds/kosh.wav']);
+		this.load.audio('win', ['assets/sounds/win.wav']);
 		this.load.audio('shuffle1', ['assets/sounds/shuffle1.wav']);
 		this.load.audio('shuffle2', ['assets/sounds/shuffle2.wav']);
 		this.load.audio('reveal-short', ['assets/sounds/reveal-short.wav']);

@@ -27,7 +27,15 @@ export class Card {
 		return this.isJoker || this.rank.value > 0 && this.rank.value < 7;
 	}
 
+	public isSuit(suit: string): boolean {
+		return this.isJoker || this.suit === suit;
+	}
+
 	public toString() {
 		return `[Card ${this.rank.symbol} of ${this.suit}]`;
+	}
+
+	public get value() {
+		return this.rank.value;
 	}
 }

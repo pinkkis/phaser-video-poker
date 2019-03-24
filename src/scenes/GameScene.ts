@@ -1,5 +1,5 @@
 import { BaseScene } from './BaseScene';
-import { IGameSettings, gameSettings } from '../config/GameSettings';
+import { IGameSettings, gameSettings, IHand } from '../config/GameSettings';
 import { Colors } from '../config/Colors';
 import { cardWidth, cardHeight, CardSprite } from '../components/CardSprite';
 import { PokerGame } from '../services/PokerGame';
@@ -10,7 +10,7 @@ import { SlotController } from '../components/SlotController';
 import { ShuffleDeck } from '../components/ShuffleDeck';
 import { ButtonController } from '../components/ButtonController';
 import { CardSlot } from '../components/CardSlot';
-import { GameState } from '../components/EnumGameState';
+import { GameState, Hands } from '../components/Enums';
 
 export class GameScene extends BaseScene {
 	public slotController: SlotController;
@@ -81,7 +81,7 @@ export class GameScene extends BaseScene {
 
 		// game start
 		this.registry.events.on('changedata', (parent: any, key: string, data: any) => {
-			console.log('registrychange', key, data);
+			console.info('registrychange', key, data);
 
 			if (key === 'state') {
 				this.stateChange(key, data);
@@ -95,6 +95,7 @@ export class GameScene extends BaseScene {
 						onComplete: () => {
 							this.moneyText.setText(data.current);
 							this.moneyTween = null;
+							this.moneyTweenOldValue = 0;
 						},
 					});
 				} else {
@@ -104,7 +105,6 @@ export class GameScene extends BaseScene {
 
 			if (key === 'bet') {
 				this.betText.setText(data);
-				this.winningsGroup.clear(false, true);
 				this.createWinnings();
 				this.sound.play('bet', {volume: .5});
 			}
@@ -112,6 +112,7 @@ export class GameScene extends BaseScene {
 
 		// deal button
 		this.events.on('btn:deal', () => {
+			console.info('Deal press');
 			const curState = this.registry.get('state');
 			if (curState === GameState.DEFAULT) {
 				this.registry.set('money', { current: this.registry.get('money').current - this.registry.get('bet'), old: this.registry.get('money').current });
@@ -170,22 +171,28 @@ export class GameScene extends BaseScene {
 
 		// bet button
 		this.events.on('btn:bet', () => {
+			console.info('Bet press');
 			let currentBet = this.registry.get('bet');
 			this.registry.set('bet', currentBet < Math.min(5, this.registry.get('money').current) ? ++currentBet : 1);
 		}, this);
 
 		// payout button
 		this.events.on('btn:payout', () => {
-			// payout
+			console.info('Payout press');
+			this.registry.set('money', { current: this.registry.get('winnings').current + this.registry.get('money').current, old: this.registry.get('money').current});
+			this.registry.set('winnings', { current: 0, old: 0 });
+			this.registry.set('state', GameState.SHUFFLING);
+			this.createWinnings();
 		}, this);
 
 		// double button
 		this.events.on('btn:double', () => {
-			// double
+			console.info('Double press');
 		}, this);
 
 		// hold buttons
 		this.events.on('btn:hold', (slot: CardSlot) => {
+			console.info('Hold press');
 			slot.setHeld(!slot.held);
 		}, this);
 	}
@@ -193,11 +200,11 @@ export class GameScene extends BaseScene {
 	// -----------------------------
 
 	private stateChange(key: string, data: any) {
-		console.log('stateChange', key, data);
-
 		switch (data) {
 			case GameState.ATTRACT:
 				this.registry.set('money', {current: 0, old: 0});
+				this.registry.set('bet', 1);
+				this.registry.set('winnings', {current: 0, old: 0});
 				break;
 
 			case GameState.START:
@@ -207,6 +214,10 @@ export class GameScene extends BaseScene {
 
 			case GameState.DEFAULT:
 				if (this.registry.get('money').current > 0) {
+					if (this.registry.get('money').current < this.registry.get('bet')) {
+						this.registry.set('bet', this.registry.get('money').current);
+					}
+
 					this.buttonController.dimAll();
 					this.slotController.unHoldAll();
 					this.buttonController.bet.lit = true;
@@ -227,10 +238,15 @@ export class GameScene extends BaseScene {
 			case GameState.WINNING:
 				this.buttonController.dimAll();
 				const handResult = this.pokerGame.checkHand(this.slotController.hand);
-
+				console.info('Winning: ', Hands[handResult]);
 				if (handResult) {
+					const hand: IHand = this.getHand(handResult);
+					this.sound.play('win', { volume: .5 });
+					this.registry.set('winnings', { current: hand.multiplier * this.registry.get('bet'), old: 0 });
+					this.createWinnings(handResult);
 					this.buttonController.payout.lit = true;
-					this.buttonController.double.lit = true;
+					// TODO: doubling
+					// this.buttonController.double.lit = true;
 				} else {
 					this.registry.set('state', GameState.DEFAULT);
 				}
@@ -291,6 +307,7 @@ export class GameScene extends BaseScene {
 				}
 
 				this.shuffleDeck.once('shufflecomplete', () => {
+					console.info('Shuffle complete');
 					this.pokerGame.deck.shuffle();
 					const dealtHand = this.pokerGame.deal(5);
 					this.slotController.slot(0).setCard(new CardSprite(this, this.shuffleDeck.x, this.shuffleDeck.y, dealtHand[0]));
@@ -414,12 +431,16 @@ export class GameScene extends BaseScene {
 		]);
 	}
 
-	private createWinnings() {
+	private createWinnings(highlightHand?: Hands) {
+		this.winningsGroup.clear(false, true);
 		let counter = 0;
 		for (const hand of this.gameSettings.hands) {
 			this.winningsGroup.addMultiple([
-				this.add.bitmapText(135, 34 + 9 * counter, 'arcade', `${hand.name}`.padEnd(17, ' '), 8),
-				this.add.bitmapText(270, 34 + 9 * counter, 'arcade', `${hand.multiplier * this.registry.get('bet')}`.padStart(3, ' '), 8),
+				this.add.bitmapText(135, 34 + 9 * counter, 'arcade', `${hand.name}`.padEnd(17, ' '), 8)
+					.setTint(highlightHand && highlightHand === hand.key ? Colors.YELLOW_TEXT.color : Colors.WHITE.color),
+
+				this.add.bitmapText(270, 34 + 9 * counter, 'arcade', `${hand.multiplier * this.registry.get('bet')}`.padStart(3, ' '), 8)
+					.setTint(highlightHand && highlightHand === hand.key ? Colors.YELLOW_TEXT.color : Colors.WHITE.color),
 			]);
 			counter++;
 		}
@@ -480,6 +501,11 @@ export class GameScene extends BaseScene {
 
 		// other buttons
 		this.buttonsGroup.addMultiple([payBtn, doubleBtn, lowBtn, highBtn, betBtn, dealBtn]).setDepth(70, 0);
+	}
+
+	private getHand(hand: Hands) {
+		const result = this.gameSettings.hands.filter( (h: IHand) => h.key === hand);
+		return result.length ? result[0] : null;
 	}
 
 }

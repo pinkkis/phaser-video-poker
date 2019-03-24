@@ -2,7 +2,7 @@ export const Colors = {
 	GRAY 			: new Phaser.Display.Color(127, 127, 127),
 	UI_BLUE 		: new Phaser.Display.Color(127, 127, 255),
 	WHITE 			: new Phaser.Display.Color(255, 255, 255),
-	YELLOW_TEXT 	: new Phaser.Display.Color(255, 255, 200),
+	YELLOW_TEXT 	: new Phaser.Display.Color(255, 255, 0),
 	BLACK 			: new Phaser.Display.Color(0, 0, 0),
 	RED 			: new Phaser.Display.Color(255, 0, 0),
 	BUTTON_GREEN	: new Phaser.Display.Color(63, 175, 63),

@@ -1,32 +1,54 @@
 <!DOCTYPE html>
 <html lang="en">
+
 	<head>
 		<meta charset="UTF-8" />
-		<meta
-			name="viewport"
-			content="width=device-width, initial-scale=1.0, maximum-scale=2.0"
-		/>
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=2.0" />
 		<meta http-equiv="X-UA-Compatible" content="ie=edge" />
 		<title>Video Poker</title>
 
-		<!-- <script async src="https://www.googletagmanager.com/gtag/js?id="></script> -->
+		<script async src="https://www.googletagmanager.com/gtag/js?id=UA-136698858-3"></script>
 		<script>
 			window.env = {
 				buildType: '<%= htmlWebpackPlugin.options.buildType %>',
 				version: '<%= htmlWebpackPlugin.options.version %>',
 			};
 
-			// window.dataLayer = window.dataLayer || [];
-			// function gtag() {
-			// 	dataLayer.push(arguments);
-			// }
-			// gtag('js', new Date());
-			// gtag('config', 'UA-######-1', { 'anonymize_ip': true });
+			window.dataLayer = window.dataLayer || [];
+			function gtag() {
+				dataLayer.push(arguments);
+			}
+			gtag('js', new Date());
+			gtag('config', 'UA-136698858-3', { 'anonymize_ip': true });
 		</script>
 	</head>
 
 	<body>
 		<div id="game-container"></div>
-		<p>Work in progress, things probably don't work yet :)</p>
+
+		<section id="text-container">
+			<h3>Video Poker Instructions</h3>
+			<p>You start with 20 monies, if you run out, refresh the page to start at 20 again. If you win, click "Pay"
+				to get the winnings into your money. Doubling not yet implemented.</p>
+			<p>The game is still a work in progress, things may not all work correctly yet.</p>
+			<p>Version:
+				<script>document.write(window.env.version);</script>
+			</p>
+
+			<aside>
+				<h4>Cookies</h4>
+				<p>This website uses Google Analytics cookies to collect anonymized usage statistics to help us develop
+					our
+					services further. You can view our <a href="https://poisonvial.com/privacy.html"
+						target="_blank">privacy
+						policy here</a>. Games may additionally store your save data in your browser. This information
+					is
+					not transmitted across the network. Games which do not require logins do not collect any user
+					specific
+					data.</p>
+			</aside>
+		</section>
+
 	</body>
+
 </html>

@@ -1,6 +1,20 @@
 import { IGameSettings } from '../config/GameSettings';
 import { Card } from '../components/Card';
 import { Deck } from '../components/Deck';
+import { Hands } from '../components/Enums';
+
+export const sortComparator = (a: Card, b: Card) => {
+	return a.value > b.value ? 1 : a.value === b.value ? 0 : -1;
+};
+
+export const hasJoker = (hand: Card[]): boolean => {
+	return !hand.every( (c: Card) => !c.isJoker );
+};
+
+export const handCounts = (hand: Card[]): Map<any, number> => {
+	return hand.map( (c: Card) => c.value)
+			.reduce((acc, val) => acc.set(val, 1 + (acc.get(val) || 0)), new Map());
+};
 
 export class PokerGame extends Phaser.Events.EventEmitter {
 	public deck: Deck;
@@ -16,7 +30,42 @@ export class PokerGame extends Phaser.Events.EventEmitter {
 		this.emit('game:ready');
 	}
 
-	public checkHand(cards: Card[]): any {
+	public checkHand(hand: Card[]): any {
+		if (hand.length !== 5) {
+			return null;
+		}
+
+		if (this.hasFiveOfAKind(hand)) {
+			return Hands.FIVE_OF_A_KIND;
+		}
+
+		if (this.hasFlush(hand) && this.hasStraight(hand) && this.hasRoyal(hand)) {
+			return Hands.STRAIGHT_FLUSH;
+		}
+
+		if (this.hasFlush(hand) && this.hasStraight(hand)) {
+			return Hands.STRAIGHT_FLUSH;
+		}
+
+		if (this.hasFourOfAKind(hand)) {
+			return Hands.FOUR_OF_A_KIND;
+		}
+
+		if (this.hasFullHouse(hand)) {
+			return Hands.FULL_HOUSE;
+		}
+
+		if (this.hasFlush(hand)) {
+			return Hands.FLUSH;
+		}
+
+		if (this.hasStraight(hand)) {
+			return Hands.STRAIGHT;
+		}
+
+		if (this.hasThreeOfAKind(hand)) {
+			return Hands.THREE_OF_A_KIND;
+		}
 
 		return null;
 	}
@@ -36,5 +85,100 @@ export class PokerGame extends Phaser.Events.EventEmitter {
 	private bindEvents() {
 		//
 	}
+
+	private hasFlush(hand: Card[]): boolean {
+		const card = hand[0].isJoker ? hand[1] : hand[0];
+		return hand.every( (c: Card) => c.suit === card.suit);
+	}
+
+	private hasRoyal(hand: Card[]) {
+		return false;
+	}
+
+	private hasStraight(hand: Card[]): boolean {
+		const j = hasJoker(hand);
+		const counts = handCounts(j ? hand.filter( (c: Card) => !c.isJoker ) : hand);
+
+		// we don't all unique values, so can't be a straight
+		if (counts.size !== (j ? 4 : 5)) { return false; }
+
+		const sortedHand: number[] = hand.sort(sortComparator).map( (c: Card) => c.value );
+		const hasAce = sortedHand.some( (v: number) => v === 1);
+
+		// if ace can be 1 in this straight or not
+		const isHigh = !j ? sortedHand[0] > 5 : sortedHand[1] > 5;
+
+		// remove first element since it's a 1 and push a high ace at the end
+		if (isHigh && hasAce) {
+			sortedHand.push(14);
+			sortedHand.shift();
+		}
+
+		let prevValue = sortedHand[0];
+		for (let next = 1; next < 5; next++) {
+			if (sortedHand[next] === prevValue + 1) {
+				prevValue++;
+			} else {
+				return false;
+			}
+		}
+
+		return true;
+	}
+
+	private hasFullHouse(hand: Card[]): boolean {
+		const j = hasJoker(hand);
+		const counts = handCounts(j ? hand.filter( (c: Card) => !c.isJoker ) : hand);
+
+		// if we have two different kinds of values
+		if (counts.size === 2) {
+			const vals = counts.values();
+			if (j) {
+				// if we have two of the value
+				if (vals.next().value === 2) {
+					return true;
+				}
+			} else {
+				// should be 2 + 3 counts without joker
+				return vals.next().value + vals.next().value === 5;
+			}
+		}
+
+		return false;
+	}
+
+	private hasThreeOfAKind(hand: Card[]): boolean {
+		const j = hasJoker(hand);
+		const counts = handCounts(j ? hand.filter( (c: Card) => !c.isJoker ) : hand);
+
+		for (const v of counts.values()) {
+			if (v === (j ? 2 : 3)) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	private hasFourOfAKind(hand: Card[]): boolean {
+		const j = hasJoker(hand);
+		const counts = handCounts(j ? hand.filter( (c: Card) => !c.isJoker ) : hand);
+
+		for (const v of counts.values()) {
+			if (v === (j ? 3 : 4)) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	private hasFiveOfAKind(hand: Card[]): boolean {
+		// if no joker, can't be this hand
+		if (!hasJoker(hand)) { return false; }
+		const card = hand[0].isJoker ? hand[1] : hand[0];
+		return hand.filter( (c: Card) => c.value === card.value).length === 4;
+	}
+
 
 }
