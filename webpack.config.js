@@ -11,7 +11,7 @@ const version = require('./package.json').version;
 
 // Phaser webpack config
 const phaserModule = path.join(__dirname, '/node_modules/phaser/');
-const phaser = path.join(phaserModule, 'dist/phaser.js');
+const phaser = path.join(phaserModule, process.env.NODE_ENV === 'production' ? 'dist/phaser.min.js' : 'dist/phaser.js');
 
 module.exports = {
 	output: {
