@@ -128,6 +128,7 @@ export class GameScene extends BaseScene {
 						x: this.slotManager.slot(index).x,
 						y: this.slotManager.slot(index).y,
 						duration: 200,
+						onStart: () => { this.sound.play('deal', {volume: 0.5}); }
 					});
 				});
 
