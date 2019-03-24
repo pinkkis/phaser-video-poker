@@ -629,7 +629,7 @@ export class GameScene extends BaseScene {
 			this.add.circle(182, 10, 12, Colors.COIN_YELLOW.clone().darken(20).color).setOrigin(0).setDepth(51),
 			this.add.circle(180, 9, 12, Colors.COIN_YELLOW.color).setOrigin(0).setDepth(51),
 
-			this.add.bitmapText(5, 11, 'arcade', `money`, 8).setDepth(51),
+			this.add.bitmapText(6, 11, 'arcade', `money`, 8).setDepth(51),
 			this.add.bitmapText(150, 10, 'arcade', `bet`, 8).setDepth(51),
 
 			this.moneyText = this.add.bitmapText(122, 6, 'arcade', `${this.registry.get('money').current}`, 16).setOrigin(1, 0).setDepth(51),

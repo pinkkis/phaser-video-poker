@@ -11,7 +11,7 @@ export interface IHand {
 }
 
 export const gameSettings: IGameSettings = {
-	maxBet: 8,
+	maxBet: 5,
 	betStep: 1,
 	betStart: 1,
 	startMoney: 20,
