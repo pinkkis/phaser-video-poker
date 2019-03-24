@@ -29,8 +29,6 @@ export class BootScene extends BaseScene {
 	}
 
 	public create(): void {
-		console.info('BootScene - create()');
-
 		this.createTexture();
 
 		this.scene.start('GameScene', {});

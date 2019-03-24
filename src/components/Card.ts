@@ -8,7 +8,7 @@ export class Card {
 	constructor(suit: Suit, rank: IRank) {
 		this.suit = suit;
 		this.rank = rank;
-		this.textureKey = `card_${suit}_${rank.symbol}`;
+		this.textureKey = `card_${suit}_${rank.value}`;
 	}
 
 	public get isJoker(): boolean {

@@ -42,8 +42,6 @@ export class GameScene extends BaseScene {
 	}
 
 	public create(): void {
-		console.info('GameScene - create()');
-
 		this.rts = [];
 		this.gameSettings = gameSettings;
 		this.shuffleDeck = new ShuffleDeck(this, 10, 40).setDepth(30);

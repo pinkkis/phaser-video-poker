@@ -16,7 +16,7 @@ export const handCounts = (hand: Card[]): Map<any, number> => {
 			.reduce((acc, val) => acc.set(val, 1 + (acc.get(val) || 0)), new Map());
 };
 
-export class PokerGame{
+export class PokerGame {
 	public deck: Deck;
 	public settings: IGameSettings;
 
@@ -25,7 +25,7 @@ export class PokerGame{
 		this.deck = new Deck(this.settings.jokers);
 	}
 
-	public checkHand(hand: Card[]): any {
+	public checkHand(hand: Card[]): Hands {
 		if (hand.length !== 5) {
 			return null;
 		}
@@ -34,8 +34,8 @@ export class PokerGame{
 			return Hands.FIVE_OF_A_KIND;
 		}
 
-		if (this.hasFlush(hand) && this.hasStraight(hand) && this.hasRoyal(hand)) {
-			return Hands.STRAIGHT_FLUSH;
+		if (this.hasRoyal(hand) && this.hasFlush(hand) && this.hasStraight(hand)) {
+			return Hands.ROYAL_FLUSH;
 		}
 
 		if (this.hasFlush(hand) && this.hasStraight(hand)) {
@@ -77,14 +77,19 @@ export class PokerGame{
 
 	// private
 	private hasFlush(hand: Card[]): boolean {
-		const card = hand[0].isJoker ? hand[1] : hand[0];
-		return hand.every( (c: Card) => c.suit === card.suit);
+		const j = hasJoker(hand);
+		const card = j ? hand[1] : hand[0];
+		return hand.filter( (c: Card) => !c.isJoker )
+					.every( (c: Card) => c.suit === card.suit);
 	}
 
 	private hasRoyal(hand: Card[]) {
-		return false;
+		return hand.map( (c: Card) => c.value )
+					.filter( (v: number) => v > 1 )
+					.every( (v: number) => v >= 10 );
 	}
 
+	// TODO: only works with one joker
 	private hasStraight(hand: Card[]): boolean {
 		const j = hasJoker(hand);
 		const counts = handCounts(j ? hand.filter( (c: Card) => !c.isJoker ) : hand);
@@ -92,11 +97,13 @@ export class PokerGame{
 		// we don't all unique values, so can't be a straight
 		if (counts.size !== (j ? 4 : 5)) { return false; }
 
-		const sortedHand: number[] = hand.sort(sortComparator).map( (c: Card) => c.value );
+		const sortedHand: number[] = hand.filter( (c: Card) => !c.isJoker )
+										.sort(sortComparator).map( (c: Card) => c.value );
+
 		const hasAce = sortedHand.some( (v: number) => v === 1);
 
 		// if ace can be 1 in this straight or not
-		const isHigh = !j ? sortedHand[0] > 5 : sortedHand[1] > 5;
+		const isHigh = !j ? sortedHand[hasAce ? 1 : 0] > 5 : sortedHand[hasAce ? 2 : 1] > 5;
 
 		// remove first element since it's a 1 and push a high ace at the end
 		if (isHigh && hasAce) {
@@ -105,9 +112,14 @@ export class PokerGame{
 		}
 
 		let prevValue = sortedHand[0];
-		for (let next = 1; next < 5; next++) {
-			if (sortedHand[next] === prevValue + 1) {
+		let jokerUsed = this.settings.jokers === 0;
+		for (let next = 1; next < sortedHand.length; next++) {
+			const comparison = sortedHand[next] === prevValue + 1;
+			if (comparison) {
 				prevValue++;
+			} else if (j && !jokerUsed) {
+				prevValue += 2;
+				jokerUsed = true;
 			} else {
 				return false;
 			}

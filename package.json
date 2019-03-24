@@ -4,7 +4,8 @@
   "description": "phaser-video-poker",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "ava",
+    "test:watch": "ava -w",
     "build": "cross-env NODE_ENV=production webpack --mode production",
     "start": "cross-env NODE_ENV=development webpack-dev-server --mode development --progress --port=8000 --open"
   },
@@ -33,6 +34,7 @@
     "@babel/preset-env": "^7.4.2",
     "@babel/preset-typescript": "^7.3.3",
     "@csstools/normalize.css": "^9.0.1",
+    "ava": "^1.4.0",
     "babel-loader": "^8.0.5",
     "clean-webpack-plugin": "^2.0.1",
     "copy-webpack-plugin": "^4.6.0",
@@ -51,6 +53,7 @@
     "stats-js": "^1.0.0",
     "terser-webpack-plugin": "^1.2.3",
     "ts-loader": "^5.3.3",
+    "ts-node": "^8.0.3",
     "tslint": "^5.14.0",
     "typescript": "^3.3.4000",
     "webpack": "^4.29.6",
