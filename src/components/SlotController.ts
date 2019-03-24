@@ -26,12 +26,16 @@ export class SlotController {
 		return this.cardSlots;
 	}
 
-	public get freeSlots() {
+	public get unheldSlots() {
 		return this.cardSlots.filter( (slot: CardSlot) => !slot.held);
 	}
 
 	public get emptySlots() {
 		return this.cardSlots.filter( (slot: CardSlot) => !slot.card);
+	}
+
+	public get filledSlots() {
+		return this.cardSlots.filter( (slot: CardSlot) => slot.card);
 	}
 
 	public get cards() {
@@ -63,7 +67,7 @@ export class SlotController {
 	}
 
 	public flipAll(faceUp: boolean) {
-		this.slots.forEach( (slot: CardSlot) => slot.card.flipCard(faceUp) );
+		this.filledSlots.forEach( (slot: CardSlot) => slot.card.flipCard(faceUp) );
 	}
 
 	public slotCard(card: CardSprite): CardSlot {

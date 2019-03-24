@@ -14,9 +14,7 @@ export class Button extends Phaser.GameObjects.Container {
 
 	private isLit: boolean = false;
 
-	constructor(scene: Phaser.Scene, x: number, y: number,
-				color: Phaser.Display.Color, text: string,
-				buttonWidth: number = 44, buttonHeight: number = 16) {
+	constructor(scene: Phaser.Scene, x: number, y: number, color: Phaser.Display.Color, text: string, buttonWidth: number = 44, buttonHeight: number = 16) {
 		super(scene, x, y);
 
 		this.text = text;
@@ -49,10 +47,10 @@ export class Button extends Phaser.GameObjects.Container {
 			.setStrokeStyle(2, this.isLit ? this.borderColorLit.color : this.borderColor.color)
 			.setFillStyle(this.isLit ? this.colorLit.color : this.buttonColor.color);
 
-		if (value) {
+		if (this.isLit) {
 			this.button.setInteractive({ cursor: 'pointer' });
 		} else {
-			this.button.removeInteractive();
+			this.button.disableInteractive();
 		}
 	}
 

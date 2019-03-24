@@ -25,12 +25,17 @@ export class GameScene extends BaseScene {
 	private winningsGroup: Phaser.GameObjects.Group;
 	private uiGroup: Phaser.GameObjects.Group;
 	private buttonsGroup: Phaser.GameObjects.Group;
+	private doubleGroup: Phaser.GameObjects.Group;
 	private shuffleDeck: ShuffleDeck;
 
 	private moneyText: Phaser.GameObjects.BitmapText;
 	private betText: Phaser.GameObjects.BitmapText;
 	private moneyTween: Phaser.Tweens.Tween;
 	private moneyTweenOldValue: number;
+
+	private doubleBetText: Phaser.GameObjects.BitmapText;
+	private doubleTween: Phaser.Tweens.Tween;
+	private doubleTweenOldValue: number;
 
 	constructor() {
 		super('GameScene');
@@ -72,23 +77,37 @@ export class GameScene extends BaseScene {
 
 			this.moneyText.setText(`${newValue}`);
 		}
+
+		if (this.doubleTween) {
+			this.doubleTweenOldValue = this.doubleTweenOldValue || 0;
+			const newValue: number = Math.floor(this.doubleTween.getValue());
+			if (newValue - this.doubleTweenOldValue > 1) {
+				this.sound.play('coin', {volume: .5});
+				this.doubleTweenOldValue = newValue;
+			}
+
+			this.doubleBetText.setText(`${newValue}`);
+		}
 	}
 
 	// -- private methods -----------------------------
 
 	private bindEvents() {
-		// this.events.on('', () => {}, this);
-
 		// game start
 		this.registry.events.on('changedata', (parent: any, key: string, data: any) => {
 			console.info('registrychange', key, data);
 
 			if (key === 'state') {
-				this.stateChange(key, data);
+				this.stateChange(data);
 			}
 
 			if (key === 'money') {
 				if (data.current > this.registry.get('money').old ) {
+					if (this.moneyTween) {
+						this.moneyTween.complete();
+						this.moneyText.setText(this.registry.get('money').old);
+					}
+
 					this.moneyTween = this.tweens.addCounter({
 						from: this.registry.get('money').old,
 						to: data.current,
@@ -103,10 +122,29 @@ export class GameScene extends BaseScene {
 				}
 			}
 
+			if (key === 'winnings') {
+				if (data.current > this.registry.get('winnings').old ) {
+					if (this.doubleTween) {
+						this.doubleTween.complete();
+						this.doubleBetText.setText(this.registry.get('winnings').old);
+					}
+
+					this.doubleTween = this.tweens.addCounter({
+						from: this.registry.get('winnings').old,
+						to: data.current,
+						onComplete: () => {
+							this.doubleBetText.setText(data.current);
+							this.doubleTween = null;
+							this.doubleTweenOldValue = 0;
+						},
+					});
+				}
+			}
+
 			if (key === 'bet') {
 				this.betText.setText(data);
 				this.createWinnings();
-				this.sound.play('bet', {volume: .5});
+				this.sound.play('bet', {volume: .5, detune: data * 100 });
 			}
 		}, this);
 
@@ -114,17 +152,21 @@ export class GameScene extends BaseScene {
 		this.events.on('btn:deal', () => {
 			console.info('Deal press');
 			const curState = this.registry.get('state');
-			if (curState === GameState.DEFAULT) {
+			if (curState === GameState.WINNING || curState === GameState.DOUBLE_REPEAT) {
+				// emulate payout pressed
+				this.events.emit('btn:payout');
+				this.events.emit('btn:deal');
+			} else if (curState === GameState.DEFAULT) {
 				this.registry.set('money', { current: this.registry.get('money').current - this.registry.get('bet'), old: this.registry.get('money').current });
 				this.registry.set('state', GameState.SHUFFLING);
 			} else if ( curState === GameState.DISCARD) {
 				// have to hold at least one
-				if (this.slotController.freeSlots.length < 5) {
+				if (this.slotController.unheldSlots.length < 5) {
 					this.buttonController.dimAll();
 					const discardTimeline = this.tweens.createTimeline({});
 					const drawTimeline = this.tweens.createTimeline({});
 
-					this.slotController.freeSlots.forEach( (slot: CardSlot) => {
+					this.slotController.unheldSlots.forEach( (slot: CardSlot) => {
 						discardTimeline.add({
 							targets: slot.card,
 							y: '+=100',
@@ -137,7 +179,7 @@ export class GameScene extends BaseScene {
 					discardTimeline.setCallback('onComplete', () => {
 						this.registry.set('state', GameState.DRAWING);
 
-						const newCards = this.pokerGame.deal(this.slotController.freeSlots.length);
+						const newCards = this.pokerGame.deal(this.slotController.unheldSlots.length);
 						const newSlots: CardSlot[] = [];
 
 						newCards.forEach( (card: Card) => {
@@ -172,8 +214,10 @@ export class GameScene extends BaseScene {
 		// bet button
 		this.events.on('btn:bet', () => {
 			console.info('Bet press');
-			let currentBet = this.registry.get('bet');
-			this.registry.set('bet', currentBet < Math.min(5, this.registry.get('money').current) ? ++currentBet : 1);
+			const currentBet = this.registry.get('bet');
+			this.registry.set('bet', currentBet < Math.min(this.gameSettings.maxBet, this.registry.get('money').current)
+									? currentBet + this.gameSettings.betStep
+									: this.gameSettings.betStart);
 		}, this);
 
 		// payout button
@@ -182,12 +226,26 @@ export class GameScene extends BaseScene {
 			this.registry.set('money', { current: this.registry.get('winnings').current + this.registry.get('money').current, old: this.registry.get('money').current});
 			this.registry.set('winnings', { current: 0, old: 0 });
 			this.registry.set('state', GameState.DEFAULT);
-			this.createWinnings();
 		}, this);
 
-		// double button
+		// double buttons
 		this.events.on('btn:double', () => {
 			console.info('Double press');
+			this.registry.set('state', GameState.DOUBLE_START);
+		}, this);
+		this.events.on('btn:low', () => {
+			console.info('Low press');
+			if (this.registry.get('state') === GameState.DOUBLING) {
+				this.checkDoubleResult('low');
+				this.buttonController.high.lit = false;
+			}
+		}, this);
+		this.events.on('btn:high', () => {
+			console.info('High press');
+			if (this.registry.get('state') === GameState.DOUBLING) {
+				this.checkDoubleResult('high');
+				this.buttonController.low.lit = false;
+			}
 		}, this);
 
 		// hold buttons
@@ -199,20 +257,27 @@ export class GameScene extends BaseScene {
 
 	// -----------------------------
 
-	private stateChange(key: string, data: any) {
+	private stateChange(data: any) {
 		switch (data) {
 			case GameState.ATTRACT:
+				this.buttonController.dimAll();
 				this.registry.set('money', {current: 0, old: 0});
 				this.registry.set('bet', 1);
 				this.registry.set('winnings', {current: 0, old: 0});
+				this.doubleGroup.clear(false, true);
 				break;
 
 			case GameState.START:
+				this.buttonController.dimAll();
+				this.doubleGroup.clear(false, true);
+				this.createWinnings();
 				this.registry.set('money', { current: this.gameSettings.startMoney, old: this.registry.get('money').current });
 				this.registry.set('state', 'default');
 				break;
 
 			case GameState.DEFAULT:
+				this.doubleGroup.clear(false, true);
+				this.createWinnings();
 				if (this.registry.get('money').current > 0) {
 					if (this.registry.get('money').current < this.registry.get('bet')) {
 						this.registry.set('bet', this.registry.get('money').current);
@@ -222,6 +287,7 @@ export class GameScene extends BaseScene {
 					this.slotController.unHoldAll();
 					this.buttonController.bet.lit = true;
 					this.buttonController.deal.lit = true;
+
 				} else {
 					this.registry.set('state', 'attract');
 				}
@@ -244,9 +310,10 @@ export class GameScene extends BaseScene {
 					this.sound.play('win', { volume: .5 });
 					this.registry.set('winnings', { current: hand.multiplier * this.registry.get('bet'), old: 0 });
 					this.createWinnings(handResult);
+					this.createDoubling();
 					this.buttonController.payout.lit = true;
-					// TODO: doubling
-					// this.buttonController.double.lit = true;
+					this.buttonController.double.lit = true;
+					this.buttonController.deal.lit = true;
 				} else {
 					this.registry.set('state', GameState.DEFAULT);
 				}
@@ -254,57 +321,66 @@ export class GameScene extends BaseScene {
 				break;
 
 			case GameState.DISCARD:
+				this.buttonController.dimAll();
 				this.buttonController.deal.lit = true;
 				this.slotController.unHoldAll();
 				this.slotController.buttons.forEach((b: Button) => b.lit = true);
 				break;
 
+			case GameState.DOUBLE_REPEAT:
+				this.buttonController.dimAll();
+				this.buttonController.deal.lit = true;
+				this.buttonController.double.lit = true;
+				this.buttonController.payout.lit = true;
+				break;
+
+			case GameState.DOUBLE_START:
+				this.buttonController.dimAll();
+				this.winningsGroup.clear(false, true);
+				this.registry.set('winnings', {current: this.registry.get('winnings').current * 2 , old: this.registry.get('winnings').current});
+				this.registry.set('state', GameState.DOUBLE_SHUFFLE);
+				break;
+
 			case GameState.DOUBLING:
 				this.buttonController.dimAll();
+				this.buttonController.low.lit = true;
+				this.buttonController.high.lit = true;
+
+				break;
+
+			case GameState.DOUBLE_SHUFFLE:
+				this.buttonController.dimAll();
+
+				this.shuffleDeck.once('shufflecomplete', () => {
+					this.pokerGame.deck.shuffle();
+					const doubleCard = this.pokerGame.deal(1);
+					this.slotController.slot(2).setCard(new CardSprite(this, this.shuffleDeck.x, this.shuffleDeck.y, doubleCard[0]));
+
+					const timeline = this.tweens.createTimeline({});
+
+					timeline.add({
+						targets: this.slotController.slot(2).card,
+						x: this.slotController.slot(2).x,
+						y: this.slotController.slot(2).y,
+						duration: 200,
+						onStart: () => { this.sound.play('deal', {volume: 0.5}); },
+					}).setCallback('onComplete', () => {
+						this.registry.set('state', GameState.DOUBLING);
+					}, null, this);
+
+					timeline.play();
+				});
+
+				// shuffle
+				this.playShuffle();
+
 				break;
 
 			case GameState.SHUFFLING:
 				this.buttonController.dimAll();
 				this.registry.set('state', GameState.DEALING);
 
-				if (!this.slotController.emptySlots.length) {
-					this.slotController.flipAll(false);
-
-					const preShuffleTimeline = this.tweens.createTimeline({});
-
-					preShuffleTimeline.add({
-						targets: this.shuffleDeck,
-						x: this.scale.gameSize.width / 2 - 24,
-						y: this.scale.gameSize.height / 2 - 32,
-						duration: 200,
-					});
-
-					this.slotController.slots.forEach( (slot: CardSlot) => {
-						preShuffleTimeline.add({
-							targets: slot.card,
-							x: this.scale.gameSize.width / 2 - 24,
-							y: this.scale.gameSize.height / 2 - 32,
-							duration: 150,
-							onStart: () => { this.sound.play('deal', {volume: 0.5}); },
-							onComplete: () => { slot.discard(); },
-						});
-					});
-
-					preShuffleTimeline.add({
-						targets: this.shuffleDeck,
-						x: this.shuffleDeck.mainPosition.x,
-						y: this.shuffleDeck.mainPosition.y,
-						duration: 200,
-					});
-
-					preShuffleTimeline.setCallback('onComplete', () => {
-						this.shuffleDeck.shuffleAnimation();
-					});
-
-					preShuffleTimeline.play();
-				} else {
-					this.shuffleDeck.shuffleAnimation();
-				}
+				this.playShuffle();
 
 				this.shuffleDeck.once('shufflecomplete', () => {
 					console.info('Shuffle complete');
@@ -339,10 +415,78 @@ export class GameScene extends BaseScene {
 				break;
 
 			default:
+				this.buttonController.dimAll();
 				console.warn('Unknown state received: ', data);
 				this.registry.set('state', GameState.ATTRACT);
 		}
 
+	}
+
+	private checkDoubleResult(guess: string) {
+		const sprite = this.slotController.slot(2).card;
+		sprite.flipCard(true);
+
+		if ( (guess === 'high' && sprite.card.isHigh) || (guess === 'low' && sprite.card.isLow)) {
+			this.sound.play('win', {volume: 0.5});
+			this.registry.set('state', GameState.DOUBLE_REPEAT);
+		} else {
+			this.registry.set('winnings', {current: 0, old: 0});
+			this.sound.play('kosh', {volume: 0.5});
+
+			this.tweens.add({
+				targets: sprite,
+				y: '+=100',
+				easing: 'Power1',
+				duration: 500,
+				completeDelay: 500,
+				delay: 1000,
+				onComplete: () => {
+					this.slotController.slot(2).discard();
+					this.registry.set('state', GameState.DEFAULT);
+				},
+			});
+		}
+	}
+
+	private playShuffle() {
+		if (this.slotController.emptySlots.length < 5) {
+			this.slotController.flipAll(false);
+
+			const preShuffleTimeline = this.tweens.createTimeline({});
+
+			preShuffleTimeline.add({
+				targets: this.shuffleDeck,
+				x: this.scale.gameSize.width / 2 - 24,
+				y: this.scale.gameSize.height / 2 - 32,
+				duration: 200,
+			});
+
+			this.slotController.filledSlots.forEach( (slot: CardSlot) => {
+				preShuffleTimeline.add({
+					targets: slot.card,
+					x: this.scale.gameSize.width / 2 - 24,
+					y: this.scale.gameSize.height / 2 - 32,
+					duration: 150,
+					onStart: () => { this.sound.play('deal', {volume: 0.5}); },
+					onComplete: () => { slot.discard(); },
+				});
+			});
+
+			preShuffleTimeline.add({
+				targets: this.shuffleDeck,
+				x: this.shuffleDeck.mainPosition.x,
+				y: this.shuffleDeck.mainPosition.y,
+				duration: 200,
+			});
+
+			preShuffleTimeline.setCallback('onComplete', () => {
+				this.shuffleDeck.shuffleAnimation();
+			});
+
+			preShuffleTimeline.play();
+		} else {
+			this.shuffleDeck.shuffleAnimation();
+		}
 	}
 
 	private createMainUI() {
@@ -351,11 +495,31 @@ export class GameScene extends BaseScene {
 		this.backgroundGroup = this.add.group();
 		this.buttonsGroup = this.add.group();
 		this.winningsGroup = this.add.group();
+		this.doubleGroup = this.add.group();
 
 		this.createBackground();
 		this.createButtons();
 		this.createWinnings();
 		this.createUi();
+		this.createDoubling();
+	}
+
+	private createDoubling() {
+		this.doubleGroup.addMultiple([
+			this.add.rectangle(0, this.scale.gameSize.height - 50, this.scale.gameSize.width, 25, Colors.PURPLE.color, 1)
+				.setOrigin(0),
+
+			this.add.rectangle(40, this.scale.gameSize.height - 46, 50, 16, Colors.UI_BLUE.color, 1)
+				.setStrokeStyle(2, Colors.WHITE.color)
+				.setOrigin(0),
+
+				this.add.bitmapText(10, this.scale.gameSize.height - 42, 'arcade', `bet`, 8),
+				this.add.bitmapText(130, this.scale.gameSize.height - 42, 'arcade', `low (A-6)   high (8-K)`, 8),
+		]).setDepth(80, 0);
+
+		this.doubleBetText = this.add.bitmapText(85, this.scale.gameSize.height - 42, 'arcade', `${this.registry.get('winnings').current}`, 8).setOrigin(1, 0);
+
+		this.doubleGroup.add(this.doubleBetText.setDepth(81));
 	}
 
 	private createCardTextures() {
@@ -478,20 +642,18 @@ export class GameScene extends BaseScene {
 
 	private createButtons() {
 		// create buttons
-		// TODO: move to controller
-		const payBtn = new Button(this, 15, 220, Colors.BUTTON_YELLOW, 'pay');
-		const doubleBtn = new Button(this, 65, 220, Colors.BUTTON_ORANGE, 'dbl');
-		const lowBtn = new Button(this, 115, 220, Colors.BUTTON_ORANGE, 'low');
-		const highBtn = new Button(this, 165, 220, Colors.BUTTON_ORANGE, 'high');
-		const betBtn = new Button(this, 215, 220, Colors.BUTTON_BLUE, 'bet');
-		const dealBtn = new Button(this, 265, 220, Colors.BUTTON_GREEN, 'deal');
+		const payBtn = 		new Button(this, 15,  218, Colors.BUTTON_YELLOW, 'pay');
+		const lowBtn = 		new Button(this, 65,  218, Colors.BUTTON_ORANGE, 'low');
+		const highBtn = 	new Button(this, 115, 218, Colors.BUTTON_ORANGE, 'high');
+		const doubleBtn = 	new Button(this, 165, 218, Colors.BUTTON_ORANGE, 'dbl');
+		const betBtn = 		new Button(this, 215, 218, Colors.BUTTON_BLUE, 'bet');
+		const dealBtn = 	new Button(this, 265, 218, Colors.BUTTON_GREEN, 'deal');
 
 		this.slotController.slot(0).setBtn(new Button(this, this.slotController.slot(0).x + 3, 195, Colors.BUTTON_RED, 'hold'));
 		this.slotController.slot(1).setBtn(new Button(this, this.slotController.slot(1).x + 3, 195, Colors.BUTTON_RED, 'hold'));
 		this.slotController.slot(2).setBtn(new Button(this, this.slotController.slot(2).x + 3, 195, Colors.BUTTON_RED, 'hold'));
 		this.slotController.slot(3).setBtn(new Button(this, this.slotController.slot(3).x + 3, 195, Colors.BUTTON_RED, 'hold'));
 		this.slotController.slot(4).setBtn(new Button(this, this.slotController.slot(4).x + 3, 195, Colors.BUTTON_RED, 'hold'));
-
 
 		this.buttonController = new ButtonController(this, dealBtn, doubleBtn, lowBtn, highBtn, payBtn, betBtn,
 			this.slotController.slot(0).holdBtn, this.slotController.slot(1).holdBtn, this.slotController.slot(2).holdBtn, this.slotController.slot(3).holdBtn, this.slotController.slot(4).holdBtn);

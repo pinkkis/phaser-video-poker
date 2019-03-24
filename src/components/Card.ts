@@ -19,11 +19,11 @@ export class Card {
 		return this.isJoker || this.suit === 'club' || this.suit === 'spade';
 	}
 
-	public get isBig(): boolean {
+	public get isHigh(): boolean {
 		return this.isJoker || this.rank.value > 7 && this.rank.value < 14;
 	}
 
-	public get isSmall(): boolean {
+	public get isLow(): boolean {
 		return this.isJoker || this.rank.value > 0 && this.rank.value < 7;
 	}
 

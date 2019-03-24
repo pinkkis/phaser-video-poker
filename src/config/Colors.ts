@@ -14,4 +14,5 @@ export const Colors = {
 	BACKGROUND 		: new Phaser.Display.Color(33, 33, 33),
 	CARD_COLOR 		: new Phaser.Display.Color(233, 233, 200),
 	HOLD_LABEL		: new Phaser.Display.Color(255, 200, 200),
+	PURPLE			: new Phaser.Display.Color(200, 100, 200),
 };

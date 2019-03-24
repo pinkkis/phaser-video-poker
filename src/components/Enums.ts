@@ -8,6 +8,9 @@ export enum GameState {
 	WINNING = 'winning',
 	DISCARD = 'discard',
 	DOUBLING = 'doubling',
+	DOUBLE_REPEAT = 'doublingrepeat',
+	DOUBLE_SHUFFLE = 'doubleshuffle',
+	DOUBLE_START = 'doublestart',
 	SHUFFLING = 'shuffling',
 }
 

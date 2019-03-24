@@ -180,5 +180,4 @@ export class PokerGame extends Phaser.Events.EventEmitter {
 		return hand.filter( (c: Card) => c.value === card.value).length === 4;
 	}
 
-
 }
