@@ -2,8 +2,11 @@ import { CardSprite } from './CardSprite';
 import { Card } from './Card';
 
 export class ShuffleDeck extends Phaser.GameObjects.Container {
+	public mainPosition: Phaser.Math.Vector2;
+
 	constructor(scene: Phaser.Scene, x: number = 0, y: number = 0) {
 		super(scene, x, y);
+		this.mainPosition = new Phaser.Math.Vector2(x, y);
 		this.createCards();
 		scene.add.existing(this);
 	}

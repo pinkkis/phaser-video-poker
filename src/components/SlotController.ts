@@ -1,8 +1,7 @@
 import { CardSlot } from './CardSlot';
-import { HoldLabel } from './HoldLabel';
-import { Button } from './Button';
+import { CardSprite } from './CardSprite';
 
-export class SlotManager {
+export class SlotController {
 	private cardSlots: CardSlot[];
 
 	constructor() {
@@ -31,6 +30,10 @@ export class SlotManager {
 		return this.cardSlots.filter( (slot: CardSlot) => !slot.held);
 	}
 
+	public get emptySlots() {
+		return this.cardSlots.filter( (slot: CardSlot) => !slot.card);
+	}
+
 	public get cards() {
 		return this.cardSlots.map( (slot: CardSlot) => {
 			return slot.card;
@@ -49,8 +52,28 @@ export class SlotManager {
 		});
 	}
 
+	public get hand() {
+		return this.cards.map( (card: CardSprite) => {
+			return card.card;
+		});
+	}
+
 	public unHoldAll() {
 		this.slots.forEach( (slot: CardSlot) => slot.setHeld(false) );
+	}
+
+	public flipAll(faceUp: boolean) {
+		this.slots.forEach( (slot: CardSlot) => slot.card.flipCard(faceUp) );
+	}
+
+	public slotCard(card: CardSprite): CardSlot {
+		if (this.emptySlots.length > 0) {
+			const slot = this.emptySlots[0];
+			slot.setCard(card);
+			return slot;
+		}
+
+		return null;
 	}
 
 }

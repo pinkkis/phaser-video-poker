@@ -4,7 +4,6 @@ export const cardWidth: number = 48;
 export const cardHeight: number = 64;
 
 export class CardSprite extends Phaser.GameObjects.Sprite {
-	public rt: Phaser.GameObjects.RenderTexture;
 	public faceUp: boolean;
 	public card: Card | null;
 
@@ -36,6 +35,7 @@ export class CardSprite extends Phaser.GameObjects.Sprite {
 	}
 
 	public discard() {
+		this.card = null;
 		this.destroy();
 	}
 }

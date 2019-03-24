@@ -88,27 +88,27 @@ export class ButtonController {
 
 		this.hold1.events.on('click', () => {
 			this.scene.sound.play('thock', { volume: 0.5});
-			this.scene.events.emit('btn:hold', (this.scene as GameScene).slotManager.slot(0) );
+			this.scene.events.emit('btn:hold', (this.scene as GameScene).slotController.slot(0) );
 		}, this);
 
 		this.hold2.events.on('click', () => {
 			this.scene.sound.play('thock', { volume: 0.5});
-			this.scene.events.emit('btn:hold', (this.scene as GameScene).slotManager.slot(1) );
+			this.scene.events.emit('btn:hold', (this.scene as GameScene).slotController.slot(1) );
 		}, this);
 
 		this.hold3.events.on('click', () => {
 			this.scene.sound.play('thock', { volume: 0.5});
-			this.scene.events.emit('btn:hold', (this.scene as GameScene).slotManager.slot(2) );
+			this.scene.events.emit('btn:hold', (this.scene as GameScene).slotController.slot(2) );
 		}, this);
 
 		this.hold4.events.on('click', () => {
 			this.scene.sound.play('thock', { volume: 0.5});
-			this.scene.events.emit('btn:hold', (this.scene as GameScene).slotManager.slot(3) );
+			this.scene.events.emit('btn:hold', (this.scene as GameScene).slotController.slot(3) );
 		}, this);
 
 		this.hold5.events.on('click', () => {
 			this.scene.sound.play('thock', { volume: 0.5});
-			this.scene.events.emit('btn:hold', (this.scene as GameScene).slotManager.slot(4) );
+			this.scene.events.emit('btn:hold', (this.scene as GameScene).slotController.slot(4) );
 		}, this);
 	}
 }

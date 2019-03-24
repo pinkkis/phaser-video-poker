@@ -41,4 +41,9 @@ export class CardSlot {
 		return this;
 	}
 
+	public discard() {
+		this.card.discard();
+		this.card = null;
+	}
+
 }
