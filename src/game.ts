@@ -5,6 +5,7 @@ import { BootScene } from './scenes/BootScene';
 import { gameConfig } from './config/GameConfig';
 import { GameScene } from './scenes/GameScene';
 import { gameSettings } from './config/GameSettings';
+import { LoaderScene } from './scenes/LoaderScene';
 
 // set up game class, and global stuff
 export class KokoGame extends Phaser.Game {
@@ -34,5 +35,6 @@ window.onload = () => {
 	}
 
 	game.scene.add('BootScene', BootScene, true);
+	game.scene.add('LoaderScene', LoaderScene, false);
 	game.scene.add('GameScene', GameScene, false, gameSettings);
 };
