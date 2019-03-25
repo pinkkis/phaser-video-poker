@@ -91,11 +91,12 @@ export class PokerGame {
 
 	// TODO: only works with one joker
 	private hasStraight(hand: Card[]): boolean {
-		const j = hasJoker(hand);
+		const jokers = hand.filter( (c: Card) => c.isJoker ).length;
+		const j = jokers > 0;
 		const counts = handCounts(j ? hand.filter( (c: Card) => !c.isJoker ) : hand);
 
 		// we don't all unique values, so can't be a straight
-		if (counts.size !== (j ? 4 : 5)) { return false; }
+		if (counts.size !== (5 - jokers)) { return false; }
 
 		const sortedHand: number[] = hand.filter( (c: Card) => !c.isJoker )
 										.sort(sortComparator).map( (c: Card) => c.value );
@@ -111,17 +112,20 @@ export class PokerGame {
 			sortedHand.shift();
 		}
 
-		let prevValue = sortedHand[0];
-		let jokerUsed = this.settings.jokers === 0;
-		for (let next = 1; next < sortedHand.length; next++) {
-			const comparison = sortedHand[next] === prevValue + 1;
-			if (comparison) {
-				prevValue++;
-			} else if (j && !jokerUsed) {
-				prevValue += 2;
-				jokerUsed = true;
-			} else {
-				return false;
+		const lowest = sortedHand[0];
+		let jokersUsed = 0;
+
+		for (let i = 1; i < sortedHand.length; i++) {
+			if (!sortedHand.includes(lowest + i)) {
+				if (jokersUsed < jokers) {
+					jokersUsed++;
+
+					if (!sortedHand.includes(lowest + i + 1)) {
+						return false;
+					}
+				} else {
+					return false;
+				}
 			}
 		}
 

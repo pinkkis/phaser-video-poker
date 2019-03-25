@@ -147,6 +147,57 @@ test('Straight - high ace joker', (t) => {
 	t.is(result, Hands.STRAIGHT);
 });
 
+test('Straight - bug #3', (t) => {
+	const deck = (t.context as any).deck as Deck;
+	const pg = new PokerGame(deck);
+
+	const hand: Card[] = [
+		new Card('heart', {symbol: '9', value: 9}),
+		new Card('club',  {symbol: '7', value: 7}),
+		new Card('club',  {symbol: '8', value: 8}),
+		new Card('club',  {symbol: 'K', value: 13}),
+		new Card('joker', {symbol: 'J', value: 99}),
+	];
+
+	const result = pg.checkHand(hand);
+
+	t.not(result, Hands.STRAIGHT);
+});
+
+test('Straight - bug #3 - positive', (t) => {
+	const deck = (t.context as any).deck as Deck;
+	const pg = new PokerGame(deck);
+
+	const hand: Card[] = [
+		new Card('heart', {symbol: '9', value: 9}),
+		new Card('club',  {symbol: '7', value: 7}),
+		new Card('club',  {symbol: '8', value: 8}),
+		new Card('club',  {symbol: 'J', value: 11}),
+		new Card('joker', {symbol: 'J', value: 99}),
+	];
+
+	const result = pg.checkHand(hand);
+
+	t.is(result, Hands.STRAIGHT);
+});
+
+test('Straight - bug #3 - random', (t) => {
+	const deck = (t.context as any).deck as Deck;
+	const pg = new PokerGame(deck);
+
+	const hand: Card[] = [
+		new Card('heart', {symbol: 'J', value: 11}),
+		new Card('club',  {symbol: '7', value: 7}),
+		new Card('club',  {symbol: '8', value: 8}),
+		new Card('club',  {symbol: '10', value: 10}),
+		new Card('joker', {symbol: 'J', value: 99}),
+	];
+
+	const result = pg.checkHand(hand);
+
+	t.is(result, Hands.STRAIGHT);
+});
+
 test('Straight - low - joker', (t) => {
 	const deck = (t.context as any).deck as Deck;
 	const pg = new PokerGame(deck);
