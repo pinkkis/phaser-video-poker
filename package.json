@@ -1,6 +1,6 @@
 {
   "name": "phaser-video-poker",
-  "version": "0.7.0",
+  "version": "0.8.0",
   "description": "phaser-video-poker",
   "main": "index.js",
   "scripts": {

@@ -12,6 +12,13 @@ export const gameConfig: GameConfig = {
 		pixelArt: true,
 		roundPixels: true,
 	},
+	physics: {
+		default: 'arcade',
+		arcade: {
+			// debug: window.env.buildType !== 'production',
+			gravity: { y: 200 },
+		}
+	},
 	plugins: {
 		global: [] as any[],
 	},

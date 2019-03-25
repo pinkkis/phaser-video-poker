@@ -26,6 +26,8 @@ export class GameScene extends BaseScene {
 	private uiGroup: Phaser.GameObjects.Group;
 	private buttonsGroup: Phaser.GameObjects.Group;
 	private doubleGroup: Phaser.GameObjects.Group;
+	private attractContainer: Phaser.GameObjects.Container;
+
 	private shuffleDeck: ShuffleDeck;
 
 	private moneyText: Phaser.GameObjects.BitmapText;
@@ -61,7 +63,7 @@ export class GameScene extends BaseScene {
 
 		this.bindEvents();
 
-		this.registry.set('state', 'start');
+		this.registry.set('state', GameState.ATTRACT);
 	}
 
 	public update(): void {
@@ -263,12 +265,14 @@ export class GameScene extends BaseScene {
 				this.registry.set('bet', 1);
 				this.registry.set('winnings', {current: 0, old: 0});
 				this.doubleGroup.clear(false, true);
+				this.showAttract(true);
 				break;
 
 			case GameState.START:
 				this.buttonController.dimAll();
 				this.doubleGroup.clear(false, true);
 				this.createWinnings();
+				this.showAttract(false);
 				this.registry.set('money', { current: this.gameSettings.startMoney, old: this.registry.get('money').current });
 				this.registry.set('state', 'default');
 				break;
@@ -500,12 +504,73 @@ export class GameScene extends BaseScene {
 		this.buttonsGroup = this.add.group();
 		this.winningsGroup = this.add.group();
 		this.doubleGroup = this.add.group();
+		this.attractContainer = this.add.container(0, 0);
 
 		this.createBackground();
 		this.createButtons();
 		this.createWinnings();
 		this.createUi();
 		this.createDoubling();
+		this.createAttract();
+	}
+
+	private createAttract() {
+		const dimmer = this.add.rectangle(0, 0, this.scale.gameSize.width, this.scale.gameSize.height, Colors.BLACK.color, 0.50).setOrigin(0).setInteractive();
+		this.attractContainer.add([dimmer]);
+
+		for (const card of this.pokerGame.deal(8)) {
+			const cardSprite: CardSprite = new CardSprite(this,
+					Phaser.Math.Between(5, this.scale.gameSize.width - cardWidth - 5),
+					Phaser.Math.Between(this.scale.gameSize.height / 2 - cardHeight, this.scale.gameSize.height - cardHeight - 20 ),
+					card);
+
+			cardSprite.flipCard(Phaser.Math.Between(0, 1) === 0);
+
+			const physicsCard = this.physics.add.existing(cardSprite, false);
+			(physicsCard.body as Phaser.Physics.Arcade.Body)
+				.setCollideWorldBounds(true)
+				.setVelocityX(Phaser.Math.Between(-50, 50))
+				.setDrag(0, 0)
+				.setBounce(1, 1);
+
+			this.attractContainer.add(cardSprite);
+		}
+
+		const versionText = this.add.bitmapText(this.scale.gameSize.width - 5, this.scale.gameSize.height - 13, 'arcade', `ver ${window.env.version}`, 8).setOrigin(1, 0);
+		const poisonvialText = this.add.bitmapText(5, this.scale.gameSize.height - 13, 'arcade', `poison vial`, 8);
+
+		const title1 = this.add.bitmapText(this.scale.gameSize.width / 2, 20, 'arcade', 'VIDEO\n   POKER', 32).setOrigin(0.5, 0);
+		const title2 = this.add.bitmapText(this.scale.gameSize.width / 2 + 2, 22, 'arcade', 'VIDEO\n   POKER', 32).setOrigin(0.5, 0).setTint(Colors.UI_BLUE.color);
+		const title3 = this.add.bitmapText(this.scale.gameSize.width / 2 + 4, 23, 'arcade', 'VIDEO\n   POKER', 32).setOrigin(0.5, 0).setTint(Colors.RED.color);
+
+		this.tweens.add({
+			ease: 'Sine.easeInOut',
+			targets: [title1, title2, title3],
+			y: '+=12',
+			duration: 1333,
+			yoyo: true,
+			repeat: -1,
+		});
+
+		const button = new Button(this, this.scale.gameSize.width / 2 - 44, 110, Colors.BUTTON_GREEN, 'start').setScale(2);
+		button.lit = true;
+		button.events.on('click', () => {
+			this.registry.set('state', GameState.START);
+		});
+
+		this.attractContainer.add([title3, title2, title1, button, versionText, poisonvialText]);
+		this.attractContainer.setDepth(200);
+
+		this.showAttract(false);
+	}
+
+	private showAttract(show: boolean) {
+		this.attractContainer.setActive(show).setVisible(show);
+		if (show) {
+			this.physics.resume();
+		} else {
+			this.physics.pause();
+		}
 	}
 
 	private createDoubling() {
