@@ -198,6 +198,23 @@ test('Straight - bug #3 - random', (t) => {
 	t.is(result, Hands.STRAIGHT);
 });
 
+test('Straight - 2 jokers', (t) => {
+	const deck = (t.context as any).deck as Deck;
+	const pg = new PokerGame(deck);
+
+	const hand: Card[] = [
+		new Card('joker', {symbol: 'J', value: 99}),
+		new Card('club',  {symbol: '7', value: 7}),
+		new Card('diamond',  {symbol: '8', value: 8}),
+		new Card('club',  {symbol: '10', value: 10}),
+		new Card('joker', {symbol: 'J', value: 99}),
+	];
+
+	const result = pg.checkHand(hand);
+
+	t.is(result, Hands.STRAIGHT);
+});
+
 test('Straight - low - joker', (t) => {
 	const deck = (t.context as any).deck as Deck;
 	const pg = new PokerGame(deck);

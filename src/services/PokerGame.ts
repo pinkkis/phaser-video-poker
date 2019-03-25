@@ -89,7 +89,6 @@ export class PokerGame {
 					.every( (v: number) => v >= 10 );
 	}
 
-	// TODO: only works with one joker
 	private hasStraight(hand: Card[]): boolean {
 		const jokers = hand.filter( (c: Card) => c.isJoker ).length;
 		const j = jokers > 0;
@@ -112,15 +111,16 @@ export class PokerGame {
 			sortedHand.shift();
 		}
 
-		const lowest = sortedHand[0];
+		let lowest = sortedHand[0];
 		let jokersUsed = 0;
-
 		for (let i = 1; i < sortedHand.length; i++) {
 			if (!sortedHand.includes(lowest + i)) {
 				if (jokersUsed < jokers) {
 					jokersUsed++;
-
-					if (!sortedHand.includes(lowest + i + 1)) {
+					lowest++;
+					// use a joker, increment the lowest to bump the "straight" seq up
+					// and see if there's one higher then
+					if (!sortedHand.includes(lowest + i)) {
 						return false;
 					}
 				} else {
