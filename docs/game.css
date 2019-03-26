@@ -1,1 +1,1 @@
-*{box-sizing:border-box}#game-container,body,html{margin:0;padding:0}#game-container{text-align:center;max-height:95vh}#text-container{padding:10px}h3,h4{margin-bottom:5px}
+*{box-sizing:border-box}body,html{margin:0;padding:0;background-color:#000}#game-container{margin:0;padding:0;max-height:100vh}
