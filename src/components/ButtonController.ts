@@ -4,6 +4,7 @@ import { GameScene } from '../scenes/GameScene';
 export class ButtonController {
 	public scene: Phaser.Scene;
 	public deal: Button;
+	public help: Button;
 	public double: Button;
 	public low: Button;
 	public high: Button;
@@ -23,6 +24,7 @@ export class ButtonController {
 		high: Button,
 		payout: Button,
 		bet: Button,
+		help: Button,
 		hold1: Button,
 		hold2: Button,
 		hold3: Button,
@@ -30,6 +32,7 @@ export class ButtonController {
 		hold5: Button,
 	) {
 		this.deal = deal;
+		this.help = help;
 		this.scene = scene;
 		this.double = double;
 		this.low = low;
@@ -64,6 +67,10 @@ export class ButtonController {
 	private bindEvents() {
 		this.deal.events.on('click', () => {
 			this.scene.events.emit('btn:deal');
+		}, this);
+
+		this.help.events.on('click', () => {
+			this.scene.events.emit('btn:help');
 		}, this);
 
 		this.double.events.on('click', () => {

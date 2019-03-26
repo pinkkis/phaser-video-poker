@@ -25,6 +25,7 @@ export class GameScene extends BaseScene {
 	private winningsGroup: Phaser.GameObjects.Group;
 	private uiGroup: Phaser.GameObjects.Group;
 	private buttonsGroup: Phaser.GameObjects.Group;
+	private helpGroup: Phaser.GameObjects.Group;
 	private doubleGroup: Phaser.GameObjects.Group;
 	private attractContainer: Phaser.GameObjects.Container;
 
@@ -243,6 +244,12 @@ export class GameScene extends BaseScene {
 			this.registry.set('state', GameState.DEFAULT);
 		}, this);
 
+		// help button
+		this.events.on('btn:help', () => {
+			console.info('Help press');
+			this.createHelp();
+		}, this);
+
 		// double buttons
 		this.events.on('btn:double', () => {
 			console.info('Double press');
@@ -280,6 +287,9 @@ export class GameScene extends BaseScene {
 				this.registry.set('bet', 1);
 				this.registry.set('winnings', {current: 0, old: 0});
 				this.doubleGroup.clear(false, true);
+				this.helpGroup.clear(false, true);
+
+				this.buttonController.help.lit = false;
 				this.showAttract(true);
 				break;
 
@@ -293,6 +303,7 @@ export class GameScene extends BaseScene {
 				break;
 
 			case GameState.DEFAULT:
+				this.buttonController.help.lit = true;
 				this.doubleGroup.clear(false, true);
 				this.createWinnings();
 				if (this.registry.get('money').current > 0) {
@@ -520,6 +531,7 @@ export class GameScene extends BaseScene {
 		this.buttonsGroup = this.add.group();
 		this.winningsGroup = this.add.group();
 		this.doubleGroup = this.add.group();
+		this.helpGroup = this.add.group();
 		this.attractContainer = this.add.container(0, 0);
 
 		this.createVolumeControl();
@@ -529,6 +541,37 @@ export class GameScene extends BaseScene {
 		this.createUi();
 		this.createDoubling();
 		this.createAttract();
+	}
+
+	private createHelp() {
+		this.helpGroup.clear(false, true);
+
+		const dimmer = this.add.rectangle(10, 10, this.scale.gameSize.width - 20, this.scale.gameSize.height - 20, Colors.BLACK.color, 0.85).setOrigin(0).setInteractive({ cursor: 'pointer' });
+		dimmer.once(Phaser.Input.Events.GAMEOBJECT_POINTER_DOWN, () => {
+			this.helpGroup.clear(false, true);
+		});
+
+		this.helpGroup.addMultiple([
+			dimmer,
+			this.add.bitmapText(20, 15, 'arcade', `Video Poker Help`, 16).setOrigin(0),
+			this.add.bitmapText(15, 40, 'arcade', [
+				`- You start with ${this.gameSettings.startMoney} money`, '',
+				`- Use buttons on the bottom to play`, '',
+				`- Change your bet between hands`, '',
+				`- After a winning hand, collect money`,
+				`  with "Pay", or choose "Dbl" to go for`,
+				`  Double or Nothing`, '',
+				`- You can keep doubling until ${this.gameSettings.maxDouble}`, '',
+				`- While doubling:`,
+				`  7 always loses,`,
+				`  Joker always wins`, '',
+				`- You have to hold at least 1 card`, '',
+				``,
+				``,
+				``,
+				`Click to close this dialog`,
+			], 8).setOrigin(0),
+		]).setDepth(300, 0);
 	}
 
 	private createAttract() {
@@ -743,7 +786,7 @@ export class GameScene extends BaseScene {
 	}
 
 	private createVolumeControl(): void {
-		this.volumeSprite = this.add.sprite(this.scale.gameSize.width - 24, 8, 'volume', 'low')
+		this.volumeSprite = this.add.sprite(this.scale.gameSize.width - 24, 7, 'volume', 'low')
 			.setOrigin(0)
 			.setInteractive({cursor: 'pointer'})
 			.setDepth(250);
@@ -764,6 +807,7 @@ export class GameScene extends BaseScene {
 		const doubleBtn = 	new Button(this, 165, 218, Colors.BUTTON_ORANGE, 'dbl');
 		const betBtn = 		new Button(this, 215, 218, Colors.BUTTON_BLUE, 'bet');
 		const dealBtn = 	new Button(this, 265, 218, Colors.BUTTON_GREEN, 'deal');
+		const helpBtn = 	new Button(this, 235, 7, Colors.BUTTON_BLUE, 'help');
 
 		this.slotController.slot(0).setBtn(new Button(this, this.slotController.slot(0).x + 3, 195, Colors.BUTTON_RED, 'hold'));
 		this.slotController.slot(1).setBtn(new Button(this, this.slotController.slot(1).x + 3, 195, Colors.BUTTON_RED, 'hold'));
@@ -771,14 +815,14 @@ export class GameScene extends BaseScene {
 		this.slotController.slot(3).setBtn(new Button(this, this.slotController.slot(3).x + 3, 195, Colors.BUTTON_RED, 'hold'));
 		this.slotController.slot(4).setBtn(new Button(this, this.slotController.slot(4).x + 3, 195, Colors.BUTTON_RED, 'hold'));
 
-		this.buttonController = new ButtonController(this, dealBtn, doubleBtn, lowBtn, highBtn, payBtn, betBtn,
+		this.buttonController = new ButtonController(this, dealBtn, doubleBtn, lowBtn, highBtn, payBtn, betBtn, helpBtn,
 			this.slotController.slot(0).holdBtn, this.slotController.slot(1).holdBtn, this.slotController.slot(2).holdBtn, this.slotController.slot(3).holdBtn, this.slotController.slot(4).holdBtn);
 
 		// hold buttons
 		this.buttonsGroup.addMultiple(this.slotController.buttons);
 
 		// other buttons
-		this.buttonsGroup.addMultiple([payBtn, doubleBtn, lowBtn, highBtn, betBtn, dealBtn]).setDepth(70, 0);
+		this.buttonsGroup.addMultiple([payBtn, doubleBtn, lowBtn, highBtn, betBtn, dealBtn, helpBtn]).setDepth(70, 0);
 	}
 
 	private getHand(hand: Hands) {
