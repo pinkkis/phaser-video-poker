@@ -306,7 +306,9 @@ export class GameScene extends BaseScene {
 					this.buttonController.deal.lit = true;
 
 				} else {
-					this.registry.set('state', 'attract');
+					this.setTimerEvent(2000, 2000, () => {
+						this.registry.set('state', GameState.ATTRACT);
+					});
 				}
 				break;
 
