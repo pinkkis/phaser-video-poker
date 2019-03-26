@@ -65,6 +65,9 @@ export class GameScene extends BaseScene {
 
 		this.bindEvents();
 
+		this.registry.set('volume', Volume.LOW);
+
+		// Start states
 		this.registry.set('state', GameState.ATTRACT);
 	}
 
@@ -444,6 +447,7 @@ export class GameScene extends BaseScene {
 		if ( (guess === 'high' && sprite.card.isHigh) || (guess === 'low' && sprite.card.isLow)) {
 			this.sound.play('win');
 			this.registry.set('state', GameState.DOUBLE_REPEAT);
+			this.events.emit('doubling:win');
 		} else {
 			this.registry.set('winnings', {current: 0, old: 0});
 			this.sound.play('kosh');
@@ -582,6 +586,24 @@ export class GameScene extends BaseScene {
 	}
 
 	private createDoubling() {
+		const emitterShape = new Phaser.Geom.Rectangle(
+			this.slotController.slot(2).x,
+			this.slotController.slot(2).y,
+			cardWidth, cardHeight);
+
+		const emitter = this.add.particles('suits8').createEmitter({
+			frame: ['heart', 'club', 'diamond', 'spade'],
+			speed: { min: 70, max: 150 },
+			lifespan: 1500,
+			gravityY: 150,
+			quantity: 0,
+			emitZone: { source: emitterShape },
+		});
+
+		this.events.on('doubling:win', () => {
+			emitter.emitParticle(15);
+		}, this);
+
 		this.doubleGroup.addMultiple([
 			this.add.rectangle(0, this.scale.gameSize.height - 50, this.scale.gameSize.width, 25, Colors.PURPLE.color, 1)
 				.setOrigin(0),
@@ -595,7 +617,6 @@ export class GameScene extends BaseScene {
 		]).setDepth(80, 0);
 
 		this.doubleBetText = this.add.bitmapText(85, this.scale.gameSize.height - 42, 'arcade', `${this.registry.get('winnings').current}`, 8).setOrigin(1, 0);
-
 		this.doubleGroup.add(this.doubleBetText.setDepth(81));
 	}
 
