@@ -62,6 +62,10 @@ export class PokerGame {
 			return Hands.THREE_OF_A_KIND;
 		}
 
+		if (this.hasTwoPair(hand)) {
+			return Hands.TWO_PAIR;
+		}
+
 		return null;
 	}
 
@@ -148,6 +152,22 @@ export class PokerGame {
 				// should be 2 + 3 counts without joker
 				return vals.next().value + vals.next().value === 5;
 			}
+		}
+
+		return false;
+	}
+
+	private hasTwoPair(hand: Card[]): boolean {
+		const j = hasJoker(hand);
+
+		// can't have two pair with a joker, it will be three of a kind
+		if (j) { return false; }
+
+		const counts = handCounts(hand);
+
+		// if we have three different kinds of values
+		if (counts.size === 3 && hand.length === 5) {
+			return true;
 		}
 
 		return false;

@@ -79,6 +79,40 @@ test('Straight flush - no joker', (t) => {
 	t.is(result, Hands.STRAIGHT_FLUSH);
 });
 
+test('Two Pair - Ks, As - no joker', (t) => {
+	const deck = (t.context as any).deck as Deck;
+	const pg = new PokerGame(deck);
+
+	const hand: Card[] = [
+		new Card('heart', {symbol: 'K', value: 13}),
+		new Card('club',  {symbol: 'K', value: 13}),
+		new Card('spade', {symbol: 'A', value: 1}),
+		new Card('club', {symbol: 'A', value: 1}),
+		new Card('diamond', {symbol: '2', value: 2}),
+	];
+
+	const result = pg.checkHand(hand);
+
+	t.is(result, Hands.TWO_PAIR);
+});
+
+test('Two Pair - 2s, 3s - no joker', (t) => {
+	const deck = (t.context as any).deck as Deck;
+	const pg = new PokerGame(deck);
+
+	const hand: Card[] = [
+		new Card('heart', {symbol: '2', value: 2}),
+		new Card('club',  {symbol: '2', value: 2}),
+		new Card('spade', {symbol: '3', value: 3}),
+		new Card('club', {symbol: '3', value: 3}),
+		new Card('diamond', {symbol: '4', value: 4}),
+	];
+
+	const result = pg.checkHand(hand);
+
+	t.is(result, Hands.TWO_PAIR);
+});
+
 test('Full house - no joker', (t) => {
 	const deck = (t.context as any).deck as Deck;
 	const pg = new PokerGame(deck);

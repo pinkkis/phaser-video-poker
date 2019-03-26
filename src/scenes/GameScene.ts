@@ -69,6 +69,11 @@ export class GameScene extends BaseScene {
 
 		// Start states
 		this.registry.set('state', GameState.ATTRACT);
+
+		// debug start state
+		// this.registry.set('winnings', {current: 5, old: 0});
+		// this.slotController.unHoldAll();
+		// this.registry.set('state', GameState.DOUBLE_START);
 	}
 
 	public update(): void {

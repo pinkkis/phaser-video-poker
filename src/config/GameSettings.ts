@@ -58,5 +58,10 @@ export const gameSettings: IGameSettings = {
 			multiplier: 3,
 			name: '3 of a Kind',
 		},
+		{
+			key: Hands.TWO_PAIR,
+			multiplier: 3,
+			name: 'Two Pair',
+		},
 	] as IHand[],
 };
