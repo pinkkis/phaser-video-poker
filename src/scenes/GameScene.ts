@@ -10,7 +10,7 @@ import { SlotController } from '../components/SlotController';
 import { ShuffleDeck } from '../components/ShuffleDeck';
 import { ButtonController } from '../components/ButtonController';
 import { CardSlot } from '../components/CardSlot';
-import { GameState, Hands } from '../components/Enums';
+import { GameState, Hands, Volume } from '../components/Enums';
 
 export class GameScene extends BaseScene {
 	public slotController: SlotController;
@@ -29,6 +29,7 @@ export class GameScene extends BaseScene {
 	private attractContainer: Phaser.GameObjects.Container;
 
 	private shuffleDeck: ShuffleDeck;
+	private volumeSprite: Phaser.GameObjects.Sprite;
 
 	private moneyText: Phaser.GameObjects.BitmapText;
 	private betText: Phaser.GameObjects.BitmapText;
@@ -54,6 +55,7 @@ export class GameScene extends BaseScene {
 		this.pokerGame.deck.shuffle();
 
 		this.registry.set('state', 'none');
+		this.registry.set('volume', Volume.LOW);
 		this.registry.set('money', { current: 0, previous: 0});
 		this.registry.set('bet', 1);
 		this.registry.set('winnings', { current: 0, previous: 0});
@@ -71,7 +73,7 @@ export class GameScene extends BaseScene {
 			this.moneyTweenOldValue = this.moneyTweenOldValue || 0;
 			const newValue: number = Math.floor(this.moneyTween.getValue());
 			if (newValue - this.moneyTweenOldValue > 1) {
-				this.sound.play('coin', {volume: .5});
+				this.sound.play('coin');
 				this.moneyTweenOldValue = newValue;
 			}
 
@@ -82,7 +84,7 @@ export class GameScene extends BaseScene {
 			this.doubleTweenOldValue = this.doubleTweenOldValue || 0;
 			const newValue: number = Math.floor(this.doubleTween.getValue());
 			if (newValue - this.doubleTweenOldValue > 1) {
-				this.sound.play('coin', {volume: .5});
+				this.sound.play('coin');
 				this.doubleTweenOldValue = newValue;
 			}
 
@@ -144,7 +146,7 @@ export class GameScene extends BaseScene {
 			if (key === 'bet') {
 				this.betText.setText(data);
 				this.createWinnings();
-				this.sound.play('bet', {volume: .5, detune: data * 100 });
+				this.sound.play('bet', { detune: data * 100 });
 			}
 		}, this);
 
@@ -170,7 +172,7 @@ export class GameScene extends BaseScene {
 						discardTimeline.add({
 							targets: slot.card,
 							y: '+=100',
-							onStart: () => { slot.card.flipCard(false); this.sound.play('reveal-short', { volume: 0.5 }); },
+							onStart: () => { slot.card.flipCard(false); this.sound.play('reveal-short'); },
 							onComplete: () => slot.discard(),
 							duration: 250,
 						});
@@ -190,7 +192,7 @@ export class GameScene extends BaseScene {
 								x: cardSlot.x,
 								y: cardSlot.y,
 								duration: 200,
-								onStart: () => { this.sound.play('deal', {volume: 0.5}); },
+								onStart: () => { this.sound.play('deal'); },
 							});
 						});
 
@@ -309,7 +311,7 @@ export class GameScene extends BaseScene {
 				console.info('Winning: ', Hands[handResult]);
 				if (handResult) {
 					const hand: IHand = this.getHand(handResult);
-					this.sound.play('win', { volume: .5 });
+					this.sound.play('win');
 					this.registry.set('winnings', { current: hand.multiplier * this.registry.get('bet'), old: 0 });
 					this.createWinnings(handResult);
 					this.createDoubling();
@@ -371,7 +373,7 @@ export class GameScene extends BaseScene {
 						x: this.slotController.slot(2).x,
 						y: this.slotController.slot(2).y,
 						duration: 200,
-						onStart: () => { this.sound.play('deal', {volume: 0.5}); },
+						onStart: () => { this.sound.play('deal'); },
 					}).setCallback('onComplete', () => {
 						this.registry.set('state', GameState.DOUBLING);
 					}, null, this);
@@ -408,7 +410,7 @@ export class GameScene extends BaseScene {
 							x: this.slotController.slot(index).x,
 							y: this.slotController.slot(index).y,
 							duration: 200,
-							onStart: () => { this.sound.play('deal', {volume: 0.5}); },
+							onStart: () => { this.sound.play('deal'); },
 						});
 					});
 
@@ -435,11 +437,11 @@ export class GameScene extends BaseScene {
 		sprite.flipCard(true);
 
 		if ( (guess === 'high' && sprite.card.isHigh) || (guess === 'low' && sprite.card.isLow)) {
-			this.sound.play('win', {volume: 0.5});
+			this.sound.play('win');
 			this.registry.set('state', GameState.DOUBLE_REPEAT);
 		} else {
 			this.registry.set('winnings', {current: 0, old: 0});
-			this.sound.play('kosh', {volume: 0.5});
+			this.sound.play('kosh');
 
 			this.tweens.add({
 				targets: sprite,
@@ -475,7 +477,7 @@ export class GameScene extends BaseScene {
 					x: this.scale.gameSize.width / 2 - 24,
 					y: this.scale.gameSize.height / 2 - 32,
 					duration: 150,
-					onStart: () => { this.sound.play('deal', {volume: 0.5}); },
+					onStart: () => { this.sound.play('deal'); },
 					onComplete: () => { slot.discard(); },
 				});
 			});
@@ -506,6 +508,7 @@ export class GameScene extends BaseScene {
 		this.doubleGroup = this.add.group();
 		this.attractContainer = this.add.container(0, 0);
 
+		this.createVolumeControl();
 		this.createBackground();
 		this.createButtons();
 		this.createWinnings();
@@ -680,7 +683,6 @@ export class GameScene extends BaseScene {
 	}
 
 	private createUi() {
-
 		this.slotController.slot(0).setLabel(new HoldLabel(this, this.slotController.slot(0).x + 4, 170, 'held').setDepth(100));
 		this.slotController.slot(1).setLabel(new HoldLabel(this, this.slotController.slot(1).x + 4, 170, 'held').setDepth(100));
 		this.slotController.slot(2).setLabel(new HoldLabel(this, this.slotController.slot(2).x + 4, 170, 'held').setDepth(100));
@@ -707,6 +709,22 @@ export class GameScene extends BaseScene {
 			this.slotController.slot(3).holdLabel,
 			this.slotController.slot(4).holdLabel,
 		]);
+	}
+
+	private createVolumeControl(): void {
+		this.volumeSprite = this.add.sprite(this.scale.gameSize.width - 24, 8, 'volume', 'low')
+			.setOrigin(0)
+			.setInteractive({cursor: 'pointer'})
+			.setDepth(250);
+
+		this.volumeSprite.on(Phaser.Input.Events.GAMEOBJECT_POINTER_DOWN, () => {
+			const curVol = this.registry.get('volume');
+			if (curVol === Volume.LOW) { this.registry.set('volume', Volume.MUTE); this.volumeSprite.setFrame('mute'); }
+			if (curVol === Volume.MUTE) { this.registry.set('volume', Volume.HIGH); this.volumeSprite.setFrame('high'); this.sound.play('coin'); }
+			if (curVol === Volume.HIGH) { this.registry.set('volume', Volume.LOW); this.volumeSprite.setFrame('low'); this.sound.play('coin'); }
+
+			this.sound.volume = this.registry.get('volume');
+		}, this);
 	}
 
 	private createButtons() {

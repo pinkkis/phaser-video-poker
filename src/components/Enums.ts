@@ -24,3 +24,9 @@ export enum Hands {
 	STRAIGHT,
 	THREE_OF_A_KIND,
 }
+
+export enum Volume {
+	MUTE = 0,
+	LOW = 0.25,
+	HIGH = 0.5,
+}
