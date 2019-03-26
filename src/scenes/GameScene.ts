@@ -16,8 +16,6 @@ export class GameScene extends BaseScene {
 	public slotController: SlotController;
 	public buttonController: ButtonController;
 
-	private rts: Phaser.GameObjects.RenderTexture[];
-
 	private gameSettings: IGameSettings;
 	private pokerGame: PokerGame;
 
@@ -46,7 +44,6 @@ export class GameScene extends BaseScene {
 	}
 
 	public create(): void {
-		this.rts = [];
 		this.gameSettings = gameSettings;
 		this.shuffleDeck = new ShuffleDeck(this, 10, 40).setDepth(30);
 
@@ -61,7 +58,6 @@ export class GameScene extends BaseScene {
 		this.registry.set('bet', 1);
 		this.registry.set('winnings', { current: 0, previous: 0});
 
-		this.createCardTextures();
 		this.createMainUI();
 
 		this.bindEvents();
@@ -668,67 +664,6 @@ export class GameScene extends BaseScene {
 		this.doubleGroup.add(this.doubleBetText.setDepth(81));
 	}
 
-	private createCardTextures() {
-		this.pokerGame.deck.cards.forEach( (card: Card, index: number) => {
-			const rt = this.add.renderTexture(-100, -10, cardWidth, cardHeight);
-
-			const graphics = this.add.graphics()
-				.fillStyle(Colors.CARD_COLOR.color, 1)
-				.lineStyle(2, Colors.WHITE.color, 1)
-				.fillRoundedRect(0, 0, cardWidth, cardHeight, 3)
-				.strokeRoundedRect(0, 0, cardWidth, cardHeight, 3);
-
-			rt.draw([graphics]);
-
-			if (card.isJoker) {
-				const joker = this.add.image(cardWidth / 2, 25, 'joker').setOrigin(0.5);
-				const value = this.add.bitmapText(cardWidth / 2, cardHeight - 12, 'arcade', 'joker', 8)
-					.setTint(Colors.UI_BLUE.color).setOrigin(.5);
-
-				rt.draw([graphics, joker, value]);
-
-				joker.destroy();
-				value.destroy();
-
-			} else {
-				if (card.rank.value === 1) {
-					const suit = this.add.image(cardWidth / 2, cardHeight / 2, 'suits', card.suit)
-					.setOrigin(0.5);
-
-					rt.draw([suit]);
-
-					suit.destroy();
-				} else {
-					const suit = this.add.image(4, 15, 'suits8', card.suit)
-					.setOrigin(0);
-
-					const suit2 = this.add.image(45, 50, 'suits8', card.suit)
-					.setOrigin(0).setRotation(Phaser.Math.DegToRad(180));
-
-					rt.draw([suit, suit2]);
-
-					suit.destroy();
-					suit2.destroy();
-				}
-
-				const value = this.add.bitmapText(4, 3, 'arcade', card.rank.symbol, 8).setOrigin(0)
-					.setTint(card.isBlack ? Colors.BLACK.color : Colors.RED.color);
-
-				const value2 = this.add.bitmapText(45, 61, 'arcade', card.rank.symbol, 8).setOrigin(0)
-					.setRotation(Phaser.Math.DegToRad(180)).setTint(card.isBlack ? Colors.BLACK.color : Colors.RED.color);
-
-				rt.draw([value, value2]);
-
-				value.destroy();
-				value2.destroy();
-			}
-
-			graphics.destroy();
-			rt.saveTexture(card.textureKey);
-			this.rts.push(rt);
-		});
-	}
-
 	private createBackground() {
 		// background
 		this.backgroundGroup.addMultiple([
@@ -771,7 +706,7 @@ export class GameScene extends BaseScene {
 			this.add.circle(180, 9, 12, Colors.COIN_YELLOW.color).setOrigin(0).setDepth(51),
 
 			this.add.bitmapText(6, 11, 'arcade', `money`, 8).setDepth(51),
-			this.add.bitmapText(150, 10, 'arcade', `bet`, 8).setDepth(51),
+			this.add.bitmapText(147, 11, 'arcade', `bet`, 8).setDepth(51),
 
 			this.moneyText = this.add.bitmapText(122, 6, 'arcade', `${this.registry.get('money').current}`, 16).setOrigin(1, 0).setDepth(51),
 			this.betText = this.add.bitmapText(179, 6, 'arcade', `${this.registry.get('bet')}`, 16).setTint(Colors.BLACK.color).setDepth(51),

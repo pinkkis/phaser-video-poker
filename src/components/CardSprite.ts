@@ -8,7 +8,7 @@ export class CardSprite extends Phaser.GameObjects.Sprite {
 	public card: Card | null;
 
 	constructor(scene: Phaser.Scene, x: number, y: number, card: Card) {
-		super(scene, x, y, 'cardback');
+		super(scene, x, y, 'card', 'back');
 		this.card = card;
 		this.faceUp = false;
 		this.setOrigin(0);
@@ -17,7 +17,7 @@ export class CardSprite extends Phaser.GameObjects.Sprite {
 
 	public flipCard(faceUp: boolean): CardSprite {
 		this.faceUp = faceUp;
-		this.setTexture(faceUp ? this.card.textureKey : 'cardback');
+		this.setFrame(faceUp ? this.card.textureKey : 'back');
 
 		return this;
 	}
@@ -27,7 +27,7 @@ export class CardSprite extends Phaser.GameObjects.Sprite {
 			this.card = card;
 
 			if (this.faceUp) {
-				this.setTexture(this.card.textureKey);
+				this.setFrame(this.card.textureKey);
 			}
 		}
 

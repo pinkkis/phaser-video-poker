@@ -12,7 +12,7 @@ export const Colors = {
 	BUTTON_BLUE 	: new Phaser.Display.Color(63, 63, 157),
 	COIN_YELLOW 	: new Phaser.Display.Color(255, 255, 127),
 	BACKGROUND 		: new Phaser.Display.Color(55, 55, 55),
-	CARD_COLOR 		: new Phaser.Display.Color(233, 233, 200),
+	CARD_COLOR 		: new Phaser.Display.Color(233, 233, 180),
 	HOLD_LABEL		: new Phaser.Display.Color(255, 200, 200),
 	PURPLE			: new Phaser.Display.Color(200, 100, 200),
 };
