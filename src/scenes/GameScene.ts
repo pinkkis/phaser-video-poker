@@ -52,6 +52,7 @@ export class GameScene extends BaseScene {
 		this.pokerGame = new PokerGame(this.gameSettings);
 		this.pokerGame.deck.shuffle();
 
+		// Initial registry
 		this.registry.set('volume', Volume.MUTE);
 		this.registry.set('state', GameState.NONE);
 		this.registry.set('money', { current: 0, previous: 0});
@@ -59,18 +60,10 @@ export class GameScene extends BaseScene {
 		this.registry.set('winnings', { current: 0, previous: 0});
 
 		this.createMainUI();
-
 		this.bindEvents();
 
 		this.registry.set('volume', Volume.LOW);
-
-		// Start states
 		this.registry.set('state', GameState.ATTRACT);
-
-		// debug start state
-		// this.registry.set('winnings', {current: 5, old: 0});
-		// this.slotController.unHoldAll();
-		// this.registry.set('state', GameState.DOUBLE_START);
 	}
 
 	public update(): void {

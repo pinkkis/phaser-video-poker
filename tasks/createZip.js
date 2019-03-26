@@ -3,6 +3,11 @@ const fs = require('fs');
 const archiver = require('archiver');
 const version = require('../package.json').version;
 
+// check that build exists
+if (!fs.existsSync('./dist/')) {
+	throw new Error('production build does not exist. run `npm run build` first.');
+}
+
 // create a file to stream archive data to.
 if (!fs.existsSync('./build/')) {
 	fs.mkdirSync('./build/');
@@ -32,7 +37,7 @@ archive.on('error', function (err) {
 archive.pipe(output);
 
 // append files from a glob pattern
-archive.glob('**/*', {cwd: 'docs'});
+archive.glob('**/*', {cwd: 'dist'});
 
 // finalize the archive (ie we are done appending files but streams have to finish yet)
 // 'close', 'end' or 'finish' may be fired right after calling this method so register to them beforehand
