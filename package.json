@@ -1,7 +1,7 @@
 {
   "name": "phaser-video-poker",
   "version": "0.8.0",
-  "description": "phaser-video-poker",
+  "description": "Video Poker html5 game built in Phaser 3",
   "main": "index.js",
   "scripts": {
     "test": "ava",
@@ -15,7 +15,7 @@
     "type": "git",
     "url": "git+https://github.com/pinkkis/phaser-video-poker.git"
   },
-  "keywords": [],
+  "keywords": ["phaser", "game", "poker", "html5"],
   "author": "Kristian Koivisto-Kokko <pinkkis@gmail.com> (http://pinkkis.com/)",
   "license": "MIT",
   "licenses": [
