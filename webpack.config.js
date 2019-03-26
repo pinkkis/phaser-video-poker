@@ -16,7 +16,6 @@ const phaser = path.join(phaserModule, process.env.NODE_ENV === 'production' ? '
 module.exports = {
 	output: {
 		globalObject: 'this',
-		path: path.resolve(__dirname, './docs') // for github hosting
 	},
 	entry: {
 		game: ['./src/game.ts']
