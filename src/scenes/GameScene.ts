@@ -54,8 +54,8 @@ export class GameScene extends BaseScene {
 		this.pokerGame = new PokerGame(this.gameSettings);
 		this.pokerGame.deck.shuffle();
 
-		this.registry.set('state', 'none');
-		this.registry.set('volume', Volume.LOW);
+		this.registry.set('volume', Volume.MUTE);
+		this.registry.set('state', GameState.NONE);
 		this.registry.set('money', { current: 0, previous: 0});
 		this.registry.set('bet', 1);
 		this.registry.set('winnings', { current: 0, previous: 0});
@@ -146,7 +146,12 @@ export class GameScene extends BaseScene {
 			if (key === 'bet') {
 				this.betText.setText(data);
 				this.createWinnings();
-				this.sound.play('bet', { detune: data * 100 });
+				this.sound.play('bet', { detune: data * 100 - 100 });
+			}
+
+			if (key === 'volume') {
+				this.sound.volume = data;
+				this.sound.play('coin');
 			}
 		}, this);
 
@@ -720,10 +725,8 @@ export class GameScene extends BaseScene {
 		this.volumeSprite.on(Phaser.Input.Events.GAMEOBJECT_POINTER_DOWN, () => {
 			const curVol = this.registry.get('volume');
 			if (curVol === Volume.LOW) { this.registry.set('volume', Volume.MUTE); this.volumeSprite.setFrame('mute'); }
-			if (curVol === Volume.MUTE) { this.registry.set('volume', Volume.HIGH); this.volumeSprite.setFrame('high'); this.sound.play('coin'); }
-			if (curVol === Volume.HIGH) { this.registry.set('volume', Volume.LOW); this.volumeSprite.setFrame('low'); this.sound.play('coin'); }
-
-			this.sound.volume = this.registry.get('volume');
+			if (curVol === Volume.MUTE) { this.registry.set('volume', Volume.HIGH); this.volumeSprite.setFrame('high'); }
+			if (curVol === Volume.HIGH) { this.registry.set('volume', Volume.LOW); this.volumeSprite.setFrame('low'); }
 		}, this);
 	}
 
