@@ -64,7 +64,7 @@ export class LoaderScene extends BaseScene {
 	}
 
 	private createCardBackTexture() {
-		this.rt = this.add.renderTexture(0, this.scale.gameSize.height + 10, 1024, 1024);
+		this.rt = this.add.renderTexture(0, this.scale.gameSize.height + 1000, 1024, 1024);
 
 		const graphics = this.add.graphics()
 			.fillStyle(Colors.CARD_COLOR.color, 1)
@@ -88,16 +88,23 @@ export class LoaderScene extends BaseScene {
 	}
 
 	private getTexturePosition(index: number): {x: number, y: number} {
-		const x = (index % 9) * cardWidth + (index % 9) * 2;
-		const y = Math.floor(index / 9) * cardHeight + Math.floor(index / 9) * 2;
+		const x = (index % 7) * cardWidth + (index % 7) * 2;
+		const y = Math.floor(index / 7) * cardHeight + Math.floor(index / 7) * 2;
 
 		return {x, y};
 	}
 
 	private createCardTextures(graphics: Phaser.GameObjects.Graphics) {
 		new Deck(1).cards.forEach( (card: Card, index: number) => {
+			// check if frame already exists, and skip (usually multiple jokes in deck)
+			if (this.rt.texture.has(card.textureKey)) {
+				console.info('Skipping multiples of frame, ', card.textureKey);
+				return;
+			}
+
 			const texLoc = this.getTexturePosition(index + 1);
 
+			// draw card face background
 			this.rt.draw(graphics, texLoc.x, texLoc.y);
 
 			if (card.isJoker) {
@@ -105,27 +112,21 @@ export class LoaderScene extends BaseScene {
 				const value = this.add.bitmapText(texLoc.x + cardWidth / 2, texLoc.y + cardHeight - 12, 'arcade', 'joker', 8)
 					.setTint(Colors.UI_BLUE.color).setOrigin(.5);
 
-				// this.rt.draw(graphics, texLoc.x, texLoc.y);
 				this.rt.draw(joker);
 				this.rt.draw(value);
 
 				joker.destroy();
 				value.destroy();
-
 			} else {
 				if (card.rank.value === 1) {
-					const suit = this.add.image(texLoc.x + cardWidth / 2, texLoc.y + cardHeight / 2, 'suits', card.suit)
-					.setOrigin(0.5);
+					const suit = this.add.image(texLoc.x + cardWidth / 2, texLoc.y + cardHeight / 2, 'suits', card.suit).setOrigin(0.5);
 
 					this.rt.draw(suit);
 
 					suit.destroy();
 				} else {
-					const suit = this.add.image(texLoc.x + 4, texLoc.y + 15, 'suits8', card.suit)
-					.setOrigin(0);
-
-					const suit2 = this.add.image(texLoc.x + 45, texLoc.y + 50, 'suits8', card.suit)
-					.setOrigin(0).setRotation(Phaser.Math.DegToRad(180));
+					const suit = this.add.image(texLoc.x + 4, texLoc.y + 15, 'suits8', card.suit).setOrigin(0);
+					const suit2 = this.add.image(texLoc.x + 45, texLoc.y + 50, 'suits8', card.suit).setOrigin(0).setRotation(Phaser.Math.DegToRad(180));
 
 					this.rt.draw([suit, suit2]);
 
@@ -143,9 +144,10 @@ export class LoaderScene extends BaseScene {
 
 				value.destroy();
 				value2.destroy();
-
-				this.rt.texture.add(card.textureKey, 0, texLoc.x, texLoc.y, cardWidth, cardHeight);
 			}
+
+			// save texture frame
+			this.rt.texture.add(card.textureKey, 0, texLoc.x, texLoc.y, cardWidth, cardHeight);
 		});
 
 		graphics.destroy();

@@ -9,11 +9,6 @@ export class Deck {
 	private lastDrawnIndex: number = 0;
 
 	constructor(jokers: number = 1) {
-		// create a joker
-		for (let i = 0; i < jokers; i++) {
-			this.cards.push(new Card('joker', { value: 99, symbol: 'J' } as IRank));
-		}
-
 		// create suits
 		const suits = ['club', 'diamond', 'heart', 'spade'] as Suit[];
 		suits.forEach((suit: Suit) => {
@@ -21,6 +16,11 @@ export class Deck {
 				this.cards.push(new Card(suit, value));
 			}
 		});
+
+		// create a joker
+		for (let i = 0; i < jokers; i++) {
+			this.cards.push(new Card('joker', { value: 99, symbol: 'J' } as IRank));
+		}
 	}
 
 	public shuffle(): void {
