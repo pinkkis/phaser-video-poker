@@ -1,6 +1,6 @@
 {
   "name": "phaser-video-poker",
-  "version": "1.0.3",
+  "version": "1.1.0",
   "description": "Video Poker html5 game built in Phaser 3",
   "main": "index.js",
   "scripts": {

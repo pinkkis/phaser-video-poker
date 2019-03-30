@@ -42,6 +42,7 @@ export class LoaderScene extends BaseScene {
 		this.load.atlas('suits', 'assets/suits.png', 'assets/suits.json');
 		this.load.atlas('suits8', 'assets/suits-8.png', 'assets/suits-8.json');
 		this.load.atlas('volume', 'assets/volume.png', 'assets/volume.json');
+		this.load.atlas('fullscreen', 'assets/fullscreen.png', 'assets/fullscreen.json');
 		this.load.image('cardback-graphic', 'assets/cardback.png');
 		this.load.image('joker', 'assets/joker.png');
 		this.load.bitmapFont('arcade', 'assets/fonts/arcade.png', 'assets/fonts/arcade.xml');
@@ -110,7 +111,7 @@ export class LoaderScene extends BaseScene {
 			if (card.isJoker) {
 				const joker = this.add.image(texLoc.x + cardWidth / 2, texLoc.y + 25, 'joker').setOrigin(0.5);
 				const value = this.add.bitmapText(texLoc.x + cardWidth / 2, texLoc.y + cardHeight - 12, 'arcade', 'joker', 8)
-					.setTint(Colors.UI_BLUE.color).setOrigin(.5);
+					.setTint(Colors.BLACK.color).setOrigin(.5);
 
 				this.rt.draw(joker);
 				this.rt.draw(value);

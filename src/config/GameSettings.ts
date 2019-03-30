@@ -16,6 +16,7 @@ export const gameSettings: IGameSettings = {
 	betStart: 1,
 	startMoney: 25,
 	maxDouble: 333,
+	maxMoney: 9999,
 	jokers: 1,
 	hands: [
 		{

@@ -29,6 +29,7 @@ export class GameScene extends BaseScene {
 
 	private shuffleDeck: ShuffleDeck;
 	private volumeSprite: Phaser.GameObjects.Sprite;
+	private fullscreenSprite: Phaser.GameObjects.Sprite;
 
 	private moneyText: Phaser.GameObjects.BitmapText;
 	private betText: Phaser.GameObjects.BitmapText;
@@ -228,7 +229,10 @@ export class GameScene extends BaseScene {
 		// payout button
 		this.events.on('btn:payout', () => {
 			console.info('Payout press');
-			this.registry.set('money', { current: this.registry.get('winnings').current + this.registry.get('money').current, old: this.registry.get('money').current});
+			this.registry.set('money', {
+				current: Math.min(this.gameSettings.maxMoney, this.registry.get('winnings').current + this.registry.get('money').current),
+				old: this.registry.get('money').current,
+			});
 			this.registry.set('winnings', { current: 0, old: 0 });
 			this.registry.set('state', GameState.DEFAULT);
 		}, this);
@@ -526,6 +530,7 @@ export class GameScene extends BaseScene {
 		this.attractContainer = this.add.container(0, 0);
 
 		this.createVolumeControl();
+		this.createFullscreen();
 		this.createBackground();
 		this.createButtons();
 		this.createWinnings();
@@ -592,18 +597,18 @@ export class GameScene extends BaseScene {
 
 		const title1 = this.add.bitmapText(this.scale.gameSize.width / 2, 20, 'arcade', 'VIDEO\n   POKER', 32).setOrigin(0.5, 0);
 		const title2 = this.add.bitmapText(this.scale.gameSize.width / 2 + 2, 22, 'arcade', 'VIDEO\n   POKER', 32).setOrigin(0.5, 0).setTint(Colors.UI_BLUE.color);
-		const title3 = this.add.bitmapText(this.scale.gameSize.width / 2 + 4, 23, 'arcade', 'VIDEO\n   POKER', 32).setOrigin(0.5, 0).setTint(Colors.RED.color);
+		const title3 = this.add.bitmapText(this.scale.gameSize.width / 2 + 4, 24, 'arcade', 'VIDEO\n   POKER', 32).setOrigin(0.5, 0).setTint(Colors.RED.color);
 
 		this.tweens.add({
 			ease: 'Sine.easeInOut',
 			targets: [title1, title2, title3],
-			y: '+=12',
-			duration: 1333,
+			y: '+=25',
+			duration: 2500,
 			yoyo: true,
 			repeat: -1,
 		});
 
-		const button = new Button(this, this.scale.gameSize.width / 2 - 44, 110, Colors.BUTTON_GREEN, 'start').setScale(2);
+		const button = new Button(this, this.scale.gameSize.width / 2 - 44, 130, Colors.BUTTON_GREEN, 'start').setScale(2);
 		button.lit = true;
 		button.events.on('click', () => {
 			this.registry.set('state', GameState.START);
@@ -729,6 +734,25 @@ export class GameScene extends BaseScene {
 		}, this);
 	}
 
+	private createFullscreen(): void {
+		this.fullscreenSprite = this.add.sprite(this.scale.gameSize.width - 48, 7, 'fullscreen', 'on')
+			.setOrigin(0)
+			.setInteractive({cursor: 'pointer'})
+			.setDepth(250);
+
+		this.fullscreenSprite.on(Phaser.Input.Events.GAMEOBJECT_POINTER_DOWN, () => {
+			this.scale.toggleFullscreen();
+		}, this);
+
+		this.scale.onFullScreenChange = () => {
+			if (this.scale.isFullscreen) {
+				this.fullscreenSprite.setFrame('off');
+			} else {
+				this.fullscreenSprite.setFrame('on');
+			}
+		};
+	}
+
 	private createButtons() {
 		// create buttons
 		const payBtn = 		new Button(this, 15,  218, Colors.BUTTON_YELLOW, 'pay');
@@ -737,7 +761,7 @@ export class GameScene extends BaseScene {
 		const doubleBtn = 	new Button(this, 165, 218, Colors.BUTTON_ORANGE, 'dbl');
 		const betBtn = 		new Button(this, 215, 218, Colors.BUTTON_BLUE, 'bet');
 		const dealBtn = 	new Button(this, 265, 218, Colors.BUTTON_GREEN, 'deal');
-		const helpBtn = 	new Button(this, 235, 7, Colors.BUTTON_BLUE, 'help');
+		const helpBtn = 	new Button(this, 215, 7, Colors.BUTTON_BLUE, 'help');
 
 		this.slotController.slot(0).setBtn(new Button(this, this.slotController.slot(0).x + 3, 195, Colors.BUTTON_RED, 'hold'));
 		this.slotController.slot(1).setBtn(new Button(this, this.slotController.slot(1).x + 3, 195, Colors.BUTTON_RED, 'hold'));
@@ -753,6 +777,8 @@ export class GameScene extends BaseScene {
 
 		// other buttons
 		this.buttonsGroup.addMultiple([payBtn, doubleBtn, lowBtn, highBtn, betBtn, dealBtn, helpBtn]).setDepth(70, 0);
+
+		this.slotController.unHoldAll();
 	}
 
 	private getHand(hand: Hands) {
