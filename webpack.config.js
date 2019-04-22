@@ -75,7 +75,7 @@ module.exports = {
 			chunks: ['game', 'vendor'],
 			buildType: process.env.NODE_ENV,
 			version: version,
-			favicon: './src/favicon.ico',
+			favicon: './src/favicon.png',
 		}),
 		new CopyWebpackPlugin([
 			{
